@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de Gestión para Proveedores de Internet - Red Soluciones ISP">
+  <title>Red Soluciones ISP v1.0.0 - Panel de Control</title>
+  <link rel="stylesheet" href="assets/css/new-style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="main-container" id="app">
+    <!-- Panel izquierdo: Chat (inicialmente oculto) -->
+    <div class="left-panel" id="chat-panel" style="display: none;">
+      <section class="chat-section">
+        <div class="chat-header">
+          <div class="chat-title">
+            <i class="fas fa-robot"></i>
+            <div class="chat-title-text">
+              <h3>Asistente Virtual</h3>
+              <small class="ai-status" id="ai-status">Gemini 1.5 Flash - En línea</small>
+            </div>
+          </div>
+          <button class="close-chat-btn" onclick="toggleAIChat()" title="Cerrar chat" aria-label="Cerrar chat">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
+          <div class="welcome-message">
+            <p>¡Hola! Soy tu asistente de Red Soluciones ISP. ¿En qué puedo ayudarte hoy?</p>
+            <div class="suggested-questions">
+              <button class="suggestion-chip" onclick="sendSuggestedQuestion('¿Cuántos clientes activos tenemos?')">
+                <i class="fas fa-users"></i> Ver clientes activos
+              </button>
+              <button class="suggestion-chip" onclick="sendSuggestedQuestion('Muestra los prospectos recientes')">
+                <i class="fas fa-user-plus"></i> Ver prospectos
+              </button>
+              <button class="suggestion-chip" onclick="sendSuggestedQuestion('¿Cuál es el ingreso mensual?')">
+                <i class="fas fa-chart-line"></i> Ver ingresos
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <form class="chat-input-container" onsubmit="sendMessage(); return false;">
+          <div class="chat-input-wrapper">
+            <input 
+              type="text" 
+              id="chat-input" 
+              placeholder="Pregúntame sobre clientes, KPIs, zonas..." 
+              autocomplete="off"
+              aria-label="Escribe tu mensaje"
+              aria-required="true"
+            >
+            <div class="chat-actions">
+              <button type="button" class="chat-action-btn" title="Adjuntar archivo" aria-label="Adjuntar archivo">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              <button type="submit" class="send-btn" aria-label="Enviar mensaje">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+    <!-- Panel derecho: Dashboard Principal -->
+    <div class="right-panel">
+      <div class="header-bar">
+        <div class="logo-container">
+          <img src="assets/img/logo.svg" alt="Red Soluciones ISP" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnptMCAxOGMtNC40MSAwLTgtMy41OS04LThzMy41OS04IDgtOCA4IDMuNTkgOCA4LTMuNTkgOC04IDh6bS0xLTEzaDJ2NmgtMlY3em0wIDhoMnYyaC0ydi0yeiIgZmlsbD0iIzIxOTZGMiIvPjwvc3ZnPg=='; this.alt='Logo Red Soluciones'">
+          <h1>Red Soluciones ISP</h1>
+        </div>
+        <div class="header-actions">
+          <button class="ai-chat-btn" onclick="toggleAIChat()" aria-label="Abrir chat de asistente">
+            <i class="fas fa-robot"></i>
+            <span>Asistente</span>
+          </button>
+          <button class="admin-btn" onclick="window.location.href='admin.html'" title="Panel de Administración">
+            <i class="fas fa-cog"></i>
+            <span>Admin</span>
+          </button>
+          <div class="system-status">
+            <i class="fas fa-circle status-indicator" id="system-status-indicator"></i>
+            <span id="system-status-text">Conectando...</span>
+          </div>
+          <div class="last-update" id="last-update">
+            <i class="far fa-clock"></i>
+            <span>Actualizado: <span id="last-update-time">--:--</span></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashboard-section">
+        <div class="quick-actions">
+          <div class="quick-links">
+            <button class="quick-link" onclick="showClients()" id="quick-clients">
+              <div class="quick-link-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="quick-link-content">
+                <span class="quick-link-title">Ver Clientes</span>
+                <small class="quick-link-subtitle" id="client-count">Cargando...</small>
+              </div>
+              <i class="fas fa-chevron-right quick-link-arrow"></i>
+            </button>
+            
+            <button class="quick-link" onclick="showProspects()" id="quick-prospects">
+              <div class="quick-link-icon">
+                <i class="fas fa-user-plus"></i>
+              </div>
+              <div class="quick-link-content">
+                <span class="quick-link-title">Prospectos</span>
+                <small class="quick-link-subtitle" id="prospect-count">Cargando...</small>
+              </div>
+              <i class="fas fa-chevron-right quick-link-arrow"></i>
+            </button>
+            
+            <button class="quick-link" onclick="showReports()" id="quick-reports">
+              <div class="quick-link-icon">
+                <i class="fas fa-chart-pie"></i>
+              </div>
+              <div class="quick-link-content">
+                <span class="quick-link-title">Reportes</span>
+                <small class="quick-link-subtitle">Ver análisis</small>
+              </div>
+              <i class="fas fa-chevron-right quick-link-arrow"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="dashboard-content">
+          <div class="section-header">
+            <h2><i class="fas fa-chart-line"></i> Resumen Ejecutivo</h2>
+            <button class="refresh-btn" onclick="loadDashboard()" aria-label="Actualizar datos">
+              <i class="fas fa-sync-alt"></i>
+              <span>Actualizar</span>
+            </button>
+          </div>
+          
+          <div class="dashboard-grid">
+            <div class="card" id="card-total-clients">
+              <div class="card-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-value" id="total-clients-value">--</div>
+                <div class="card-label">Total de Clientes</div>
+                <div class="card-trend" id="client-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>Cargando...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card card-primary" id="card-active-users">
+              <div class="card-icon">
+                <i class="fas fa-wifi"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-value" id="active-users-value">--</div>
+                <div class="card-label">Usuarios Activos</div>
+                <div class="card-trend" id="active-users-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>Cargando...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card card-warning" id="card-monthly-revenue">
+              <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-value" id="monthly-revenue-value">--</div>
+                <div class="card-label">Ingresos Mensuales</div>
+                <div class="card-trend" id="revenue-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>Cargando...</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card card-success" id="card-satisfaction">
+              <div class="card-icon">
+                <i class="fas fa-smile"></i>
+              </div>
+              <div class="card-content">
+                <div class="card-value" id="satisfaction-value">--</div>
+                <div class="card-label">Satisfacción</div>
+                <div class="card-trend" id="satisfaction-trend">
+                  <i class="fas fa-arrow-up"></i>
+                  <span>Cargando...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        
+        <!-- Modal para mostrar clientes -->
+        <div id="clients-modal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Lista de Clientes</h3>
+              <span class="close" onclick="closeModal('clients-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div class="search-bar">
+                <input type="text" id="client-search" placeholder="Buscar cliente...">
+                <button onclick="searchClients()">Buscar</button>
+              </div>
+              <div id="clients-list">Cargando clientes...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modal para mostrar prospectos -->
+        <div id="prospects-modal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Prospectos a Contactar</h3>
+              <span class="close" onclick="closeModal('prospects-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div id="prospects-list">Cargando prospectos...</div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts del sistema -->
+  <script src="assets/js/new-script.js"></script>
+</body>
+</html>
