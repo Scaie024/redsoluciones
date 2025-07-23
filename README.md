@@ -26,8 +26,8 @@
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/redsolucionesfo/sistema1.git
-cd sistema1
+git clone https://github.com/Scaie024/redsoluciones.git
+cd redsoluciones
 
 # 2. Instalar dependencias
 pip install -r requirements.txt
@@ -302,8 +302,8 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](./LICENSE) para más det
 ## 📞 Soporte
 
 - **📚 Documentación**: [/docs](./docs/)
-- **🐛 Issues**: [GitHub Issues](https://github.com/redsolucionesfo/sistema1/issues)
-- **💬 Discusiones**: [GitHub Discussions](https://github.com/redsolucionesfo/sistema1/discussions)
+- **🐛 Issues**: [GitHub Issues](https://github.com/Scaie024/redsoluciones/issues)
+- **💬 Discusiones**: [GitHub Discussions](https://github.com/Scaie024/redsoluciones/discussions)
 - **📧 Email**: Contacto directo para soporte empresarial
 
 ---
