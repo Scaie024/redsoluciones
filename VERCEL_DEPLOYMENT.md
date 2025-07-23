@@ -57,12 +57,44 @@ En el dashboard de Vercel o con CLI:
 ```bash
 vercel env add GEMINI_API_KEY
 vercel env add GOOGLE_APPLICATION_CREDENTIALS
+vercel env add TELEGRAM_BOT_TOKEN
 ```
+
+**Variables necesarias:**
+- `GEMINI_API_KEY`: Tu API key de Google Gemini
+- `GOOGLE_APPLICATION_CREDENTIALS`: Contenido del service_account.json (en Base64)
+- `TELEGRAM_BOT_TOKEN`: `7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk`
 
 ### 4. Desplegar
 ```bash
 vercel --prod
 ```
+
+### 5. Configurar Bot de Telegram
+Después del despliegue:
+```bash
+# Ir a tu URL de Vercel
+curl https://tu-proyecto.vercel.app/api/telegram/setup
+```
+
+## 🤖 **Bot de Telegram Incluido:**
+
+**Token configurado:** `7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk`
+
+**Endpoints creados:**
+- `/api/telegram/webhook` - Recibe mensajes del bot
+- `/api/telegram/setup` - Configura el webhook automáticamente
+
+**Comandos del bot:**
+- `/start` - Iniciar conversación
+- `/help` - Mostrar ayuda
+- `/status` - Estado del sistema
+- `/clientes` - Gestión de clientes
+
+**Consultas naturales:**
+- "buscar cliente Juan"
+- "información de pagos"
+- "zonas disponibles"
 
 ## ⚠️ Limitaciones del Plan Gratuito:
 
@@ -93,10 +125,24 @@ vercel --prod
 
 ## 🎉 Resultado:
 
-**SÍ, puedes subir tu proyecto a Vercel GRATIS** con funcionalidad completa, ideal para:
+**SÍ, puedes subir tu proyecto a Vercel GRATIS** con funcionalidad completa, incluyendo:
+
+✅ **API REST completa** - Todos los endpoints funcionales
+✅ **Google Sheets** - Integración en tiempo real  
+✅ **Gemini AI** - Agente inteligente
+✅ **Dashboard Web** - Interfaz moderna
+✅ **Bot de Telegram** - Configurado y listo (`@tu_bot_name`)
+
+**Ideal para:**
 - Demos y presentaciones
 - Desarrollo y testing
 - Uso personal/pequeña empresa
 - Portfolio profesional
+- Bot de soporte 24/7
+
+**🚀 Próximos pasos después del despliegue:**
+1. Configurar webhook de Telegram
+2. Compartir Google Sheet con service account
+3. Probar bot enviando `/start` a `@tu_bot_name`
 
 ¿Quieres proceder con el despliegue?

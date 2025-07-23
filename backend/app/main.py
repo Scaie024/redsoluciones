@@ -645,6 +645,86 @@ async def get_analytics():
         logger.error(f"Error getting analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# === TELEGRAM BOT WEBHOOK ===
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(request: Request):
+    """Webhook para el bot de Telegram"""
+    try:
+        # Importar el handler del webhook
+        import sys
+        from pathlib import Path
+        api_dir = Path(__file__).parents[2] / "api"
+        sys.path.insert(0, str(api_dir))
+        
+        from telegram_webhook import handle_telegram_webhook
+        
+        # Obtener los datos del update
+        update_data = await request.json()
+        logger.info(f"📱 Telegram webhook recibido: {update_data}")
+        
+        # Procesar el update
+        response = handle_telegram_webhook(update_data)
+        
+        if response.get("method") == "sendMessage":
+            # Enviar respuesta directamente a Telegram
+            import requests
+            
+            telegram_api_url = f"https://api.telegram.org/bot7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk/sendMessage"
+            
+            requests.post(telegram_api_url, json={
+                "chat_id": response["chat_id"],
+                "text": response["text"],
+                "parse_mode": response.get("parse_mode", "Markdown")
+            })
+            
+            return {"status": "message_sent"}
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error en webhook de Telegram: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/telegram/setup")
+async def setup_telegram_webhook():
+    """Configurar webhook de Telegram"""
+    try:
+        import requests
+        
+        # URL del webhook (será la URL de Vercel + /api/telegram/webhook)
+        webhook_url = "https://tu-proyecto.vercel.app/api/telegram/webhook"
+        
+        # Configurar webhook en Telegram
+        telegram_api_url = f"https://api.telegram.org/bot7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk/setWebhook"
+        
+        response = requests.post(telegram_api_url, json={
+            "url": webhook_url
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            return {
+                "success": True,
+                "message": "Webhook configurado exitosamente",
+                "webhook_url": webhook_url,
+                "telegram_response": result
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Error configurando webhook",
+                "status_code": response.status_code,
+                "response": response.text
+            }
+            
+    except Exception as e:
+        logger.error(f"Error configurando webhook: {e}")
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}"
+        }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=settings.PORT)

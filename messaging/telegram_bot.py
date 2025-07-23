@@ -31,8 +31,9 @@ from messaging.enhanced_agent import MessagingISPAgent
 class TelegramISPBot:
     """🤖 Bot de Telegram para Red Soluciones ISP"""
     
-    def __init__(self, token: str):
-        self.token = token
+    def __init__(self, token: str = None):
+        # Usar token proporcionado o variable de entorno
+        self.token = token or os.getenv('TELEGRAM_BOT_TOKEN', '7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk')
         self.application = None
         self.sheets_service = GoogleSheetsService()
         self.agent = MessagingISPAgent(self.sheets_service)
