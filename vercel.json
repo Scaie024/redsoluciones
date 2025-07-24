@@ -22,6 +22,9 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 30
+    },
+    "api/telegram_webhook.py": {
+      "maxDuration": 25
     }
   },
   "env": {

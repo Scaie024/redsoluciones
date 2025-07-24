@@ -126,7 +126,7 @@ class IncidentData(BaseModel):
 # Root redirect
 @app.get("/")
 async def root():
-    return RedirectResponse(url="/index.html")
+    return RedirectResponse(url="/dashboard.html")
 
 # Health check endpoint
 @app.get("/health")

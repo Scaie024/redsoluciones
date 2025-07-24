@@ -4,6 +4,7 @@ Todas las configuraciones del sistema en un solo archivo
 """
 import os
 import secrets
+import logging
 from pathlib import Path
 from typing import List, Optional
 
@@ -52,13 +53,20 @@ class Settings:
     
     @property
     def GOOGLE_SHEET_ID(self) -> str:
-        return os.getenv("GOOGLE_SHEET_ID", "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")
+        sheet_id = os.getenv("GOOGLE_SHEET_ID", "")
+        if not sheet_id:
+            logging.warning("GOOGLE_SHEET_ID not set - using demo sheet")
+            return "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"  # Demo sheet
+        return sheet_id
     
     # === GEMINI AI ===
     @property
     def GEMINI_API_KEY(self) -> str:
         """Gemini API key for AI agent"""
-        return os.getenv("GEMINI_API_KEY", "AIzaSyD5_316B_bOhy-lVJAdCliYH6ZBhFALBWo")
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            logging.warning("GEMINI_API_KEY not set - AI features will be limited")
+        return api_key
     
     # === SEGURIDAD ===
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
@@ -71,7 +79,7 @@ class Settings:
         "http://localhost:3000",
         "http://localhost:8004",
         "http://127.0.0.1:8004",
-        "*"  # Para desarrollo
+        "https://red-soluciones.vercel.app",  # Dominio de producción
     ]
 
     def __init__(self):
