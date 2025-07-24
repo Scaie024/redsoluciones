@@ -21,10 +21,10 @@
   ],
   "functions": {
     "api/index.py": {
-      "maxDuration": 30
+      "maxDuration": 10
     },
     "api/telegram_webhook.py": {
-      "maxDuration": 25
+      "maxDuration": 10
     }
   },
   "env": {
