@@ -1,4 +1,0 @@
-# Dependencias mínimas para Vercel
-fastapi==0.104.1
-pydantic==2.11.7
-python-multipart==0.0.6

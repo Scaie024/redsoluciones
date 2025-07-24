@@ -1,0 +1,13 @@
+# Archivos que Vercel debe ignorar
+*.md
+!README.md
+*.log
+*.pyc
+__pycache__/
+.git/
+.vscode/
+.env
+.env.local
+node_modules/
+*.sh
+*.env.example
