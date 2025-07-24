@@ -1,7 +1,7 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "release_date": "2025-01-24",
-  "build_timestamp": "2025-01-24T10:00:00.000000",
+  "build_timestamp": "2025-01-24T12:00:00.000000",
   "components": {
     "backend": "FastAPI + Python 3.9+",
     "frontend": "HTML/CSS/JavaScript",
