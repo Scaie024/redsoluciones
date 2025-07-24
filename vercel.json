@@ -15,10 +15,5 @@
       "runtime": "python3.9",
       "maxDuration": 10
     }
-  },
-  "env": {
-    "GEMINI_API_KEY": "@gemini_api_key",
-    "TELEGRAM_BOT_TOKEN": "@telegram_bot_token",
-    "GOOGLE_APPLICATION_CREDENTIALS_JSON": "@google_credentials_json"
   }
 }
