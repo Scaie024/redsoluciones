@@ -1,22 +1,9 @@
-# Red Soluciones ISP - Dependencias del Sistema Unificado
-
-# Core Framework
+# Dependencias esenciales para Vercel deployment
 fastapi==0.104.1
-uvicorn==0.24.0
-python-multipart==0.0.6
-
-# Google Services
-google-generativeai==0.8.5
-gspread==6.0.2
-google-auth==2.40.3
-google-auth-oauthlib==1.0.0
-google-auth-httplib2==0.2.0
-
-# Data Processing
 pydantic==2.11.7
-
-# HTTP Requests
+python-multipart==0.0.6
 requests==2.32.4
 
-# Utilities
-python-dotenv==1.0.0
+# Google Services (lightweight versions)
+google-generativeai==0.8.5
+google-auth==2.40.3
