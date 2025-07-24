@@ -1,9 +1,13 @@
-# Dependencias esenciales para Vercel deployment
+# Dependencias para Vercel deployment - Red Soluciones ISP
 fastapi==0.104.1
+uvicorn[standard]==0.24.0
 pydantic==2.11.7
 python-multipart==0.0.6
 requests==2.32.4
 
-# Google Services (lightweight versions)
+# Google Services  
 google-generativeai==0.8.5
 google-auth==2.40.3
+
+# Utilities
+python-dotenv==1.0.0
