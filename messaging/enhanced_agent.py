@@ -1,8 +1,21 @@
 """
-🤖 AGENTE ISP MEJORADO PARA MENSAJERÍA
-======================================
+💬 SISTEMA DE ATENCIÓN AL CLIENTE - RED SOLUCIONES
+================================================
 
-Agente optimizado para Telegram/WhatsApp con capacidades de registro
+Sistema de atención optimizado p    def _handle_service_info(self) -> Dict[str, Any]:
+        """📋 Información interna de servicios"""
+        return {
+            "response": "Aquí tienes los planes actuales:\n\n" +
+                       "📶 **20 Mbps** - $350/mes\n" +
+                       "📶 **50 Mbps** - $450/mes\n" +
+                       "📶 **100 Mbps** - $600/mes\n\n" +
+                       "Todos incluyen instalación e incluye soporte.\n\n" +
+                       "¿Necesitas actualizar algún precio o agregar un plan?",
+            "type": "service_info",
+            "compact": True,
+            "quick_replies": ["Ver clientes", "Estadísticas", "Agregar cliente", "Más opciones"]
+        }instantánea
+Telegram y WhatsApp
 """
 
 import json
@@ -13,30 +26,29 @@ from datetime import datetime
 from backend.app.services.smart_agent import SmartISPAgent
 
 class MessagingISPAgent(SmartISPAgent):
-    """🤖 Agente ISP optimizado para mensajería instantánea"""
+    """💬 Sistema de Atención Red Soluciones"""
     
     def __init__(self, sheets_service=None):
         super().__init__(sheets_service)
         
-        # Configuración específica para mensajería
+        # Configuración para mensajería
         self.messaging_config = {
-            "max_response_length": 800,  # WhatsApp/Telegram límite
+            "max_response_length": 600,  # Más breve
             "enable_emojis": True,
             "compact_mode": True,
-            "auto_register": True,  # Permitir auto-registro de usuarios
-            "welcome_message": True
+            "human_style": True  # Parecer humano
         }
         
-        # Patrones adicionales para mensajería
+        # Patrones de conversación natural
         self.messaging_patterns = {
-            "register": ["registrarme", "registrar", "crear cuenta", "darme de alta", "alta", "suscribir", "suscribirme"],
-            "greeting": ["hola", "buenos días", "buenas tardes", "buenas noches", "saludos", "hey"],
-            "service_info": ["servicios", "planes", "paquetes", "ofertas", "precios", "costos", "cuánto cuesta"],
-            "support": ["ayuda", "soporte", "problema", "no funciona", "falla", "internet lento"],
+            "register": ["registrarme", "registrar", "darme de alta", "suscribirme", "contratar"],
+            "greeting": ["hola", "buenos días", "buenas tardes", "hey", "saludos"],
+            "service_info": ["servicios", "planes", "precios", "costos", "cuánto cuesta", "ofertas"],
+            "support": ["ayuda", "soporte", "problema", "falla", "lento", "no funciona"],
             "contact": ["contacto", "teléfono", "dirección", "horarios", "ubicación"]
         }
         
-        self.logger.info("📱 Agente de Mensajería ISP inicializado")
+        self.logger.info("� Sistema de atención inicializado")
 
     def process_messaging_query(self, query: str, user_info: Optional[Dict] = None) -> Dict[str, Any]:
         """📱 Procesar consulta optimizada para mensajería"""
@@ -84,19 +96,17 @@ class MessagingISPAgent(SmartISPAgent):
         return self._detect_intent(query)
 
     def _handle_welcome(self, user_info: Dict) -> Dict[str, Any]:
-        """👋 Mensaje de bienvenida para nuevos usuarios"""
-        name = user_info.get('first_name', 'Usuario')
+        """👋 Saludo para el dueño o personal"""
+        name = user_info.get('first_name', 'Jefe')
         
         return {
-            "response": f"👋 ¡Hola {name}! Bienvenido a Red Soluciones ISP\n\n" +
-                       "🌐 Soy tu asistente virtual\n" +
-                       "📍 Brindamos internet en 9 zonas\n" +
-                       "💬 Pregúntame sobre:\n\n" +
-                       "• Servicios y precios\n" +
-                       "• Registrarme como cliente\n" +
-                       "• Soporte técnico\n" +
-                       "• Estado de mi servicio\n\n" +
-                       "¿En qué puedo ayudarte?",
+            "response": f"Buenos días {name}.\n\n" +
+                       "Estoy aquí para ayudarte con:\n" +
+                       "• Revisar estadísticas\n" +
+                       "• Buscar clientes\n" +
+                       "• Registrar incidentes\n" +
+                       "• Cualquier consulta del negocio\n\n" +
+                       "¿Qué necesitas?",
             "type": "welcome",
             "compact": True,
             "quick_replies": ["Ver servicios", "Registrarme", "Soporte", "Contacto"]
@@ -140,37 +150,28 @@ class MessagingISPAgent(SmartISPAgent):
     def _handle_service_info(self) -> Dict[str, Any]:
         """📋 Información de servicios"""
         return {
-            "response": "🌐 **Servicios Red Soluciones**\n\n" +
-                       "📦 **Planes Disponibles:**\n" +
-                       "• 🥉 Básico: 20 Mbps - $350/mes\n" +
-                       "• 🥈 Estándar: 50 Mbps - $450/mes\n" +
-                       "• 🥇 Premium: 100+ Mbps - $600/mes\n\n" +
-                       "✅ **Incluye:**\n" +
-                       "• Instalación gratuita\n" +
-                       "• Soporte 24/7\n" +
-                       "• WiFi de alta velocidad\n" +
-                       "• Sin permanencia forzosa\n\n" +
-                       "📍 **Cobertura:** 9 zonas activas\n\n" +
-                       "¿Te interesa algún plan?",
+            "response": "Tenemos estos planes:\n\n" +
+                       "� **20 Mbps** - $350/mes\n" +
+                       "📶 **50 Mbps** - $450/mes\n" +
+                       "📶 **100 Mbps** - $600/mes\n\n" +
+                       "✅ Instalación gratis\n" +
+                       "✅ Soporte incluido\n" +
+                       "✅ WiFi de alta velocidad\n\n" +
+                       "¿Cuál te interesa?",
             "type": "service_info",
             "compact": True,
-            "quick_replies": ["Registrarme", "Ver zonas", "Contactar", "Más info"]
+            "quick_replies": ["20 Mbps", "50 Mbps", "100 Mbps", "Más info"]
         }
 
     def _handle_support_request(self, query: str, user_info: Dict) -> Dict[str, Any]:
-        """🛠️ Manejar solicitudes de soporte"""
+        """🛠️ Registro de incidentes internos"""
         return {
-            "response": "🛠️ **Soporte Técnico**\n\n" +
-                       "Para ayudarte mejor, dime:\n\n" +
-                       "1️⃣ ¿Cuál es tu problema?\n" +
-                       "2️⃣ ¿Desde cuándo ocurre?\n" +
-                       "3️⃣ ¿Ya reiniciaste el módem?\n\n" +
-                       "**Problemas comunes:**\n" +
-                       "• Internet lento\n" +
-                       "• Sin conexión\n" +
-                       "• WiFi no funciona\n" +
-                       "• Facturación\n\n" +
-                       "Describe tu situación:",
+            "response": "Perfecto, voy a registrar el incidente.\n\n" +
+                       "Dame los detalles:\n" +
+                       "• ¿De qué cliente es?\n" +
+                       "• ¿Cuál es el problema?\n" +
+                       "• ¿Qué prioridad le damos?\n\n" +
+                       "Con esa información lo registro en el sistema.",
             "type": "support",
             "compact": True,
             "next_step": "collect_incident_details"

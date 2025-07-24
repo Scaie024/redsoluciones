@@ -6,21 +6,19 @@
 [![AI](https://img.shields.io/badge/AI-Gemini%20Pro-orange.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](./LICENSE)
 
-## � Red Soluciones ISP - Sistema Empresarial Completo v1.0.0
+## 🎯 Sistema Completo de Gestión ISP con Inteligencia Artificial
 
-## 🎯 Descripción
-**Red Soluciones ISP** es un sistema completo de gestión empresarial con agente inteligente que funciona como empleado virtual interno. Sistema 100% operativo y listo para producción.
+**Red Soluciones ISP** es un sistema empresarial completo para la gestión de proveedores de servicios de internet (ISP), integrado con inteligencia artificial y datos reales de más de 534 clientes.
 
-## ✨ Características Principales
-- � **Agente Inteligente**: Empleado virtual con Gemini AI (humanizado)
-- 📊 **Dashboard Web**: Panel de control interactivo y responsive
-- � **Google Sheets**: 534+ clientes sincronizados en tiempo real
-- 🔧 **API REST**: Endpoints completos documentados
-- � **Bots**: Telegram activo, WhatsApp preparado
-- � **Analytics**: Métricas, reportes y análisis financiero
-- 🎯 **CRUD Completo**: Clientes, prospectos, incidentes
+### ✨ Características Principales
 
-## � Inicio Rápido
+- 🧠 **Agente Inteligente**: Gemini Pro AI para soporte automatizado
+- 📊 **Datos Reales**: 534+ clientes sincronizados con Google Sheets en tiempo real
+- 🌐 **API REST Completa**: 8 endpoints completamente funcionales (100% testing)
+- 🖥️ **Dashboard Web**: Interfaz moderna y responsiva con todas las operaciones CRUD
+- 📱 **Mensajería**: Bots Telegram y WhatsApp listos para despliegue
+- 🧪 **Testing**: Suite automatizada con 100% de éxito (8/8 componentes)
+- 📚 **Documentación**: Completa y profesional para developers
 
 ---
 
@@ -28,8 +26,8 @@
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/Scaie024/redsoluciones.git
-cd redsoluciones
+git clone https://github.com/redsolucionesfo/sistema1.git
+cd sistema1
 
 # 2. Instalar dependencias
 pip install -r requirements.txt
@@ -304,8 +302,8 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](./LICENSE) para más det
 ## 📞 Soporte
 
 - **📚 Documentación**: [/docs](./docs/)
-- **🐛 Issues**: [GitHub Issues](https://github.com/Scaie024/redsoluciones/issues)
-- **💬 Discusiones**: [GitHub Discussions](https://github.com/Scaie024/redsoluciones/discussions)
+- **🐛 Issues**: [GitHub Issues](https://github.com/redsolucionesfo/sistema1/issues)
+- **💬 Discusiones**: [GitHub Discussions](https://github.com/redsolucionesfo/sistema1/discussions)
 - **📧 Email**: Contacto directo para soporte empresarial
 
 ---

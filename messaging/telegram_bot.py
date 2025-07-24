@@ -25,17 +25,20 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.app.services.sheets.service import GoogleSheetsService
+from backend.app.services.sheets.service import SheetsServiceV2
 from messaging.enhanced_agent import MessagingISPAgent
 
 class TelegramISPBot:
     """🤖 Bot de Telegram para Red Soluciones ISP"""
     
-    def __init__(self, token: str = None):
+    def __init__(self, token: Optional[str] = None):
         # Usar token proporcionado o variable de entorno
-        self.token = token or os.getenv('TELEGRAM_BOT_TOKEN', '7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk')
+        self.token = token or os.getenv('TELEGRAM_BOT_TOKEN')
+        if not self.token:
+            self.logger.warning("TELEGRAM_BOT_TOKEN not set - bot will not function")
+            self.token = ""  # Token vacío para evitar errores
         self.application = None
-        self.sheets_service = GoogleSheetsService()
+        self.sheets_service = SheetsServiceV2()
         self.agent = MessagingISPAgent(self.sheets_service)
         self.user_sessions = {}  # Almacenar sesiones de usuario
         
@@ -288,10 +291,10 @@ class TelegramISPBot:
 # Script principal para ejecutar el bot
 if __name__ == "__main__":
     # Token del bot (obtener de @BotFather)
-    BOT_TOKEN = "TU_TOKEN_AQUI"  # Reemplazar con token real
+    BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     
-    if BOT_TOKEN == "TU_TOKEN_AQUI":
-        print("❌ Configura BOT_TOKEN con tu token de @BotFather")
+    if not BOT_TOKEN:
+        print("❌ Error: La variable de entorno TELEGRAM_BOT_TOKEN no está configurada.")
         exit(1)
     
     bot = TelegramISPBot(BOT_TOKEN)

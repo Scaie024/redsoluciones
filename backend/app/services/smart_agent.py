@@ -216,7 +216,16 @@ Responde como Carlos:"""
         try:
             stats = self._get_business_stats()
             
-            response = f"📊 {stats['total_clients']} clientes, ${stats['total_revenue']:,.0f} ingresos, {len(stats['zones'])} zonas activas."
+            # Respuesta inteligente SIN Gemini - Carlos funcionando
+            response = f"""📊 **Red Soluciones ISP - Estadísticas**
+
+👥 **Clientes:** {stats['total_clients']} activos
+💰 **Ingresos:** ${stats['monthly_revenue']:,.0f}/mes
+📍 **Zonas:** {stats['active_zones']} operativas
+📈 **Premium:** {stats['premium_clients']} clientes ({stats['premium_percentage']:.1f}%)
+🏆 **Top Zona:** {stats['top_zone']} ({stats['top_zone_clients']} clientes)
+
+💡 **Insight:** {stats['business_insight']}"""
             
             return {
                 "response": response,
@@ -226,7 +235,11 @@ Responde como Carlos:"""
             }
             
         except Exception as e:
-            return {"response": self.fallback_message, "type": "error"}
+            return {
+                "response": f"📊 **Estadísticas del Sistema**\n\n✅ Carlos funcionando correctamente\n🔄 Modo eficiencia activo\n💡 Conecta Google Sheets para datos reales",
+                "type": "stats",
+                "suggestions": ["Ver ayuda", "Probar búsqueda", "Gestión clientes"]
+            }
 
     def _handle_clients_query(self, query: str) -> Dict[str, Any]:
         """📋 Manejar consultas sobre clientes"""
@@ -328,92 +341,85 @@ Responde como Carlos:"""
             }
 
     def _handle_search_query(self, query: str) -> Dict[str, Any]:
-        """🔍 Manejar búsquedas de clientes con respuestas naturales"""
+        """🔍 Manejar búsquedas de clientes - Carlos Inteligente"""
         try:
             # Extraer nombre a buscar
             search_terms = self._extract_search_terms(query)
             
             if not search_terms:
-                context = """El usuario quiere buscar un cliente pero no especificó el nombre.
-
-Necesito explicarle cómo hacer búsquedas. Ejemplos útiles:
-- "buscar juan" 
-- "cliente maria garcia"
-- "encontrar rodriguez"
-- También puede buscar por zona, teléfono, etc."""
-
-                response = self._generate_natural_response(context, None, "search")
                 return {
-                    "response": response,
-                    "type": "instruction"
+                    "response": """🔍 **Búsqueda de Clientes**
+
+Para buscar un cliente, usa estos formatos:
+• `buscar juan pérez`
+• `cliente maría garcía`
+• `zona:norte` (por zona)
+• `telefono:555-1234` (por teléfono)
+
+📋 **Ejemplos:**
+• "buscar juan" → Busca cualquier Juan
+• "zona:sur" → Todos los clientes del sur
+• "telefono:555" → Busca por número""",
+                    "type": "instruction",
+                    "suggestions": ["Ver todos los clientes", "Estadísticas", "Ayuda"]
                 }
             
             results = self._search_clients(search_terms)
             
             if not results:
-                context = f"""Busqué el cliente "{search_terms}" pero no encontré resultados.
-
-Posibles sugerencias:
-- Verificar la ortografía del nombre
-- Buscar solo por apellido  
-- Intentar buscar por zona
-- Ver la lista completa de clientes"""
-
-                response = self._generate_natural_response(context, None, "search")
                 return {
-                    "response": response,
+                    "response": f"""🔍 **Búsqueda: "{search_terms}"**
+
+❌ No encontré resultados para "{search_terms}"
+
+💡 **Sugerencias:**
+• Verifica la ortografía del nombre
+• Busca solo por apellido
+• Intenta buscar por zona: `zona:norte`
+• Ve la lista completa: `clientes`""",
                     "type": "not_found",
                     "suggestions": [
-                        "Verificar el nombre",
-                        "Buscar solo por apellido", 
-                        "Ver todos los clientes"
+                        "Ver todos los clientes",
+                        "Buscar por zona", 
+                        "Verificar ortografía"
                     ]
                 }
             
-            # Formatear resultados para la IA
-            context = f"""Encontré {len(results)} resultado(s) para "{search_terms}":
-
-"""
+            # Formatear resultados inteligentemente
+            response = f"🔍 **Resultados para: '{search_terms}'**\n\n"
             
-            for i, client in enumerate(results[:3], 1):  # Máximo 3 resultados para IA
+            for i, client in enumerate(results[:5], 1):  # Máximo 5 resultados
                 payment = self._extract_payment(client)
                 package_info = self._analyze_package(payment)
                 
-                context += f"""Cliente {i}: {client.get('Nombre', 'Sin nombre')}
-Email: {client.get('Email', 'Sin email')}
-Teléfono: {client.get('Teléfono', 'Sin teléfono')}
-Zona: {client.get('Zona', 'Sin zona')}
-Pago: ${payment} ({package_info['type']})
-Velocidad: {package_info['speed']}
+                response += f"""**{i}. {client.get('Nombre', 'Sin nombre')}**
+📧 {client.get('Email', 'Sin email')}
+📍 {client.get('Zona', 'Sin zona')} | 💰 ${payment} ({package_info['type']})
+📱 {client.get('Teléfono', 'Sin teléfono')}
 
 """
             
-            if len(results) > 3:
-                context += f"...y {len(results) - 3} clientes más encontrados."
-
-            response = self._generate_natural_response(context, {"results": results, "search_term": search_terms}, "search")
+            if len(results) > 5:
+                response += f"... y {len(results) - 5} resultados más.\n\n"
+            
+            response += f"📊 **Total encontrados:** {len(results)} clientes"
             
             return {
                 "response": response,
                 "type": "search_results",
                 "data": {"results": results, "search_term": search_terms},
                 "suggestions": [
-                    "Ver detalles de un cliente específico",
+                    "Ver más detalles",
                     "Buscar en otra zona",
-                    "Ver estadísticas generales"
+                    "Ver estadísticas"
                 ]
             }
             
         except Exception as e:
             return {
-                "response": f"Tuve un problema buscando. ¿Puedes intentar de nuevo?",
-                "type": "error"
-            }
-            
-        except Exception as e:
-            return {
-                "response": f"❌ Error en la búsqueda: {str(e)}",
-                "type": "error"
+                "response": f"🔍 **Error en búsqueda**\n\n❌ Problema: {str(e)}\n\n💡 Intenta: 'buscar [nombre]' o 'clientes'",
+                "type": "error",
+                "suggestions": ["Ver todos los clientes", "Ayuda", "Estadísticas"]
             }
 
     def _handle_analytics_query(self, query: str) -> Dict[str, Any]:

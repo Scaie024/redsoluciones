@@ -1,11 +1,25 @@
 # === CREDENCIALES SENSIBLES - NUNCA SUBIR ===
+# Archivos JSON con credenciales
 service_account.json
+**/service_account.json
+config/service_account.json
+**/credentials.json
+google-credentials.json
+
+# Variables de entorno
 *.env
+.env
 .env.*
+!.env.example
+
+# Tokens y claves de API
+api_keys.txt
+tokens.txt
 
 # === ARCHIVOS DE CONFIGURACIÓN PRIVADOS ===
 config/private/
 backend/app/core/private_config.py
+**/private/
 
 # === LOGS ===
 *.log
