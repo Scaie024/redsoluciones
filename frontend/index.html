@@ -1,238 +1,1234 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sistema de Gestión para Proveedores de Internet - Red Soluciones ISP">
-  <title>Red Soluciones ISP v1.0.0 - Panel de Control</title>
-  <link rel="stylesheet" href="assets/css/new-style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Soluciones ISP - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 32px;
+            color: #667eea;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.clients { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.zones { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.revenue { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon.active { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0 5px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .clients-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .clients-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .clients-table th,
+        .clients-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .clients-table th {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clients-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(67, 233, 123, 0.2);
+            color: #27ae60;
+        }
+
+        .status-inactive {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .chat-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-header i {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .chat-header h3 {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.bot {
+            background: #f8f9fa;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+
+            .search-section {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-container" id="app">
-    <!-- Panel izquierdo: Chat (inicialmente oculto) -->
-    <div class="left-panel" id="chat-panel" style="display: none;">
-      <section class="chat-section">
-        <div class="chat-header">
-          <div class="chat-title">
-            <i class="fas fa-robot"></i>
-            <div class="chat-title-text">
-              <h3>Asistente Virtual</h3>
-              <small class="ai-status" id="ai-status">Gemini 1.5 Flash - En línea</small>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-wifi"></i>
+                    <h1>Red Soluciones ISP</h1>
+                </div>
+                <div class="search-section">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Buscar por nombre, zona, teléfono o ID...">
+                        <button class="search-btn" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="action-btn btn-secondary" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Actualizar
+                    </button>
+                    <button class="action-btn btn-secondary" id="addProspectBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Nuevo Prospecto
+                    </button>
+                    <button class="action-btn btn-secondary" id="addIncidentBtn">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Nuevo Incidente
+                    </button>
+                    <button class="action-btn btn-primary" id="addClientBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Nuevo Cliente
+                    </button>
+                </div>
             </div>
-          </div>
-          <button class="close-chat-btn" onclick="toggleAIChat()" title="Cerrar chat" aria-label="Cerrar chat">
-            <i class="fas fa-times"></i>
-          </button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon clients">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalClients">-</div>
+                <div class="stat-label">Total Clientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon zones">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalZones">-</div>
+                <div class="stat-label">Zonas Activas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon active">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="activeClients">-</div>
+                <div class="stat-label">Clientes Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon revenue">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="monthlyRevenue">$0</div>
+                <div class="stat-label">Ingresos Mensuales</div>
+            </div>
         </div>
-        
-        <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
-          <div class="welcome-message">
-            <p>¡Hola! Soy tu asistente de Red Soluciones ISP. ¿En qué puedo ayudarte hoy?</p>
-            <div class="suggested-questions">
-              <button class="suggestion-chip" onclick="sendSuggestedQuestion('¿Cuántos clientes activos tenemos?')">
-                <i class="fas fa-users"></i> Ver clientes activos
-              </button>
-              <button class="suggestion-chip" onclick="sendSuggestedQuestion('Muestra los prospectos recientes')">
-                <i class="fas fa-user-plus"></i> Ver prospectos
-              </button>
-              <button class="suggestion-chip" onclick="sendSuggestedQuestion('¿Cuál es el ingreso mensual?')">
-                <i class="fas fa-chart-line"></i> Ver ingresos
-              </button>
+
+        <div class="main-content">
+            <div class="clients-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Lista de Clientes
+                    </h2>
+                    <div class="actions">
+                        <select id="zoneFilter" class="action-btn btn-secondary">
+                            <option value="">Todas las zonas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="loading" id="loadingClients">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Cargando clientes...
+                </div>
+                <div id="clientsContainer">
+                    <table class="clients-table">
+                        <thead>
+                            <tr>
+                                <th>ID Cliente</th>
+                                <th>Nombre</th>
+                                <th>Zona</th>
+                                <th>Teléfono</th>
+                                <th>Propietario</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
+
+            <div class="chat-section">
+                <div class="chat-header">
+                    <i class="fas fa-robot"></i>
+                    <h3>Asistente Virtual</h3>
+                    <small style="color: #666; margin-left: auto;">Gemini AI</small>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        ¡Hola! Soy tu asistente virtual. Puedo ayudarte con información sobre clientes, estadísticas, búsquedas y más. ¿En qué puedo ayudarte?
+                    </div>
+                </div>
+                <div class="loading" id="chatLoading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Escribiendo...
+                </div>
+                <div class="chat-input-container">
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Escribe tu pregunta...">
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <form class="chat-input-container" onsubmit="sendMessage(); return false;">
-          <div class="chat-input-wrapper">
-            <input 
-              type="text" 
-              id="chat-input" 
-              placeholder="Pregúntame sobre clientes, KPIs, zonas..." 
-              autocomplete="off"
-              aria-label="Escribe tu mensaje"
-              aria-required="true"
-            >
-            <div class="chat-actions">
-              <button type="button" class="chat-action-btn" title="Adjuntar archivo" aria-label="Adjuntar archivo">
-                <i class="fas fa-paperclip"></i>
-              </button>
-              <button type="submit" class="send-btn" aria-label="Enviar mensaje">
-                <i class="fas fa-paper-plane"></i>
-              </button>
-            </div>
-          </div>
-        </form>
-      </section>
     </div>
-    <!-- Panel derecho: Dashboard Principal -->
-    <div class="right-panel">
-      <div class="header-bar">
-        <div class="logo-container">
-          <img src="assets/img/logo.svg" alt="Red Soluciones ISP" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnptMCAxOGMtNC40MSAwLTgtMy41OS04LThzMy41OS04IDgtOCA4IDMuNTkgOCA4LTMuNTkgOC04IDh6bS0xLTEzaDJ2NmgtMlY3em0wIDhoMnYyaC0ydi0yeiIgZmlsbD0iIzIxOTZGMiIvPjwvc3ZnPg=='; this.alt='Logo Red Soluciones'">
-          <h1>Red Soluciones ISP</h1>
-        </div>
-        <div class="header-actions">
-          <button class="ai-chat-btn" onclick="toggleAIChat()" aria-label="Abrir chat de asistente">
-            <i class="fas fa-robot"></i>
-            <span>Asistente</span>
-          </button>
-          <button class="admin-btn" onclick="window.location.href='admin.html'" title="Panel de Administración">
-            <i class="fas fa-cog"></i>
-            <span>Admin</span>
-          </button>
-          <div class="system-status">
-            <i class="fas fa-circle status-indicator" id="system-status-indicator"></i>
-            <span id="system-status-text">Conectando...</span>
-          </div>
-          <div class="last-update" id="last-update">
-            <i class="far fa-clock"></i>
-            <span>Actualizado: <span id="last-update-time">--:--</span></span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="dashboard-section">
-        <div class="quick-actions">
-          <div class="quick-links">
-            <button class="quick-link" onclick="showClients()" id="quick-clients">
-              <div class="quick-link-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="quick-link-content">
-                <span class="quick-link-title">Ver Clientes</span>
-                <small class="quick-link-subtitle" id="client-count">Cargando...</small>
-              </div>
-              <i class="fas fa-chevron-right quick-link-arrow"></i>
-            </button>
-            
-            <button class="quick-link" onclick="showProspects()" id="quick-prospects">
-              <div class="quick-link-icon">
-                <i class="fas fa-user-plus"></i>
-              </div>
-              <div class="quick-link-content">
-                <span class="quick-link-title">Prospectos</span>
-                <small class="quick-link-subtitle" id="prospect-count">Cargando...</small>
-              </div>
-              <i class="fas fa-chevron-right quick-link-arrow"></i>
-            </button>
-            
-            <button class="quick-link" onclick="showReports()" id="quick-reports">
-              <div class="quick-link-icon">
-                <i class="fas fa-chart-pie"></i>
-              </div>
-              <div class="quick-link-content">
-                <span class="quick-link-title">Reportes</span>
-                <small class="quick-link-subtitle">Ver análisis</small>
-              </div>
-              <i class="fas fa-chevron-right quick-link-arrow"></i>
-            </button>
-          </div>
-        </div>
-        
-        <div class="dashboard-content">
-          <div class="section-header">
-            <h2><i class="fas fa-chart-line"></i> Resumen Ejecutivo</h2>
-            <button class="refresh-btn" onclick="loadDashboard()" aria-label="Actualizar datos">
-              <i class="fas fa-sync-alt"></i>
-              <span>Actualizar</span>
-            </button>
-          </div>
-          
-          <div class="dashboard-grid">
-            <div class="card" id="card-total-clients">
-              <div class="card-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="card-content">
-                <div class="card-value" id="total-clients-value">--</div>
-                <div class="card-label">Total de Clientes</div>
-                <div class="card-trend" id="client-trend">
-                  <i class="fas fa-arrow-up"></i>
-                  <span>Cargando...</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card card-primary" id="card-active-users">
-              <div class="card-icon">
-                <i class="fas fa-wifi"></i>
-              </div>
-              <div class="card-content">
-                <div class="card-value" id="active-users-value">--</div>
-                <div class="card-label">Usuarios Activos</div>
-                <div class="card-trend" id="active-users-trend">
-                  <i class="fas fa-arrow-up"></i>
-                  <span>Cargando...</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card card-warning" id="card-monthly-revenue">
-              <div class="card-icon">
-                <i class="fas fa-dollar-sign"></i>
-              </div>
-              <div class="card-content">
-                <div class="card-value" id="monthly-revenue-value">--</div>
-                <div class="card-label">Ingresos Mensuales</div>
-                <div class="card-trend" id="revenue-trend">
-                  <i class="fas fa-arrow-up"></i>
-                  <span>Cargando...</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card card-success" id="card-satisfaction">
-              <div class="card-icon">
-                <i class="fas fa-smile"></i>
-              </div>
-              <div class="card-content">
-                <div class="card-value" id="satisfaction-value">--</div>
-                <div class="card-label">Satisfacción</div>
-                <div class="card-trend" id="satisfaction-trend">
-                  <i class="fas fa-arrow-up"></i>
-                  <span>Cargando...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        
-        <!-- Modal para mostrar clientes -->
-        <div id="clients-modal" class="modal" style="display:none;">
-          <div class="modal-content">
+
+    <!-- MODALES -->
+    
+    <!-- Modal Agregar Cliente -->
+    <div id="clientModal" class="modal" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
-              <h3>Lista de Clientes</h3>
-              <span class="close" onclick="closeModal('clients-modal')">&times;</span>
+                <h3><i class="fas fa-user-plus"></i> Agregar Nuevo Cliente</h3>
+                <button class="close-modal" onclick="closeModal('clientModal')">&times;</button>
             </div>
-            <div class="modal-body">
-              <div class="search-bar">
-                <input type="text" id="client-search" placeholder="Buscar cliente...">
-                <button onclick="searchClients()">Buscar</button>
-              </div>
-              <div id="clients-list">Cargando clientes...</div>
-            </div>
-          </div>
+            <form id="clientForm">
+                <div class="form-group">
+                    <label for="clientName">Nombre Completo *</label>
+                    <input type="text" id="clientName" name="Nombre" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientPhone">Teléfono</label>
+                        <input type="tel" id="clientPhone" name="Teléfono">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail">Email</label>
+                        <input type="email" id="clientEmail" name="Email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientZone">Zona</label>
+                        <select id="clientZone" name="Zona">
+                            <option value="">Seleccionar zona</option>
+                            <option value="SALAMANCA">SALAMANCA</option>
+                            <option value="CERRO/PRIETO">CERRO/PRIETO</option>
+                            <option value="CERRO/BLANCO">CERRO/BLANCO</option>
+                            <option value="ZAUS">ZAUS</option>
+                            <option value="SAN/RAFAEL/AGUSTIN/DURANES">SAN/RAFAEL/AGUSTIN/DURANES</option>
+                            <option value="TAMBOR">TAMBOR</option>
+                            <option value="CANON">CANON</option>
+                            <option value="RESERVA">RESERVA</option>
+                            <option value="PATIOS">PATIOS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPayment">Pago Mensual</label>
+                        <input type="number" id="clientPayment" name="Pago" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="clientNotes">Notas</label>
+                    <textarea id="clientNotes" name="Notas" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Agregar Cliente</button>
+                </div>
+            </form>
         </div>
-        
-        <!-- Modal para mostrar prospectos -->
-        <div id="prospects-modal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3>Prospectos a Contactar</h3>
-              <span class="close" onclick="closeModal('prospects-modal')">&times;</span>
-            </div>
-            <div class="modal-body">
-              <div id="prospects-list">Cargando prospectos...</div>
-            </div>
-          </div>
-      </div>
     </div>
-  </div>
-  
-  <!-- Scripts del sistema -->
-  <script src="assets/js/new-script.js"></script>
+
+    <!-- Modal Agregar Prospecto -->
+    <div id="prospectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-clock"></i> Agregar Nuevo Prospecto</h3>
+                <button class="close-modal" onclick="closeModal('prospectModal')">&times;</button>
+            </div>
+            <form id="prospectForm">
+                <div class="form-group">
+                    <label for="prospectName">Nombre Completo *</label>
+                    <input type="text" id="prospectName" name="Nombre" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prospectPhone">Teléfono</label>
+                        <input type="tel" id="prospectPhone" name="Teléfono">
+                    </div>
+                    <div class="form-group">
+                        <label for="prospectEmail">Email</label>
+                        <input type="email" id="prospectEmail" name="Email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prospectZone">Zona de Interés</label>
+                        <select id="prospectZone" name="Zona">
+                            <option value="">Seleccionar zona</option>
+                            <option value="SALAMANCA">SALAMANCA</option>
+                            <option value="CERRO/PRIETO">CERRO/PRIETO</option>
+                            <option value="CERRO/BLANCO">CERRO/BLANCO</option>
+                            <option value="ZAUS">ZAUS</option>
+                            <option value="SAN/RAFAEL/AGUSTIN/DURANES">SAN/RAFAEL/AGUSTIN/DURANES</option>
+                            <option value="TAMBOR">TAMBOR</option>
+                            <option value="CANON">CANON</option>
+                            <option value="RESERVA">RESERVA</option>
+                            <option value="PATIOS">PATIOS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prospectPriority">Prioridad</label>
+                        <select id="prospectPriority" name="Prioridad">
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="prospectNotes">Notas / Observaciones</label>
+                    <textarea id="prospectNotes" name="Notas" rows="3" placeholder="Ej: Interesado en plan de 20Mbps, llamar en horario vespertino"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('prospectModal')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Agregar Prospecto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Incidente -->
+    <div id="incidentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Registrar Nuevo Incidente</h3>
+                <button class="close-modal" onclick="closeModal('incidentModal')">&times;</button>
+            </div>
+            <form id="incidentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="incidentClientId">ID Cliente *</label>
+                        <input type="text" id="incidentClientId" name="cliente_id" required placeholder="Ej: NACB00001">
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentClientName">Nombre Cliente *</label>
+                        <input type="text" id="incidentClientName" name="cliente_nombre" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="incidentType">Tipo de Incidente *</label>
+                        <select id="incidentType" name="tipo" required>
+                            <option value="">Seleccionar tipo</option>
+                            <option value="Técnico">Técnico (Sin internet, lento, intermitente)</option>
+                            <option value="Facturaciónón">Facturación (Pagos, cobros, facturas)</option>
+                            <option value="Soporte">Soporte (Configuración, ayuda)</option>
+                            <option value="Comercial">Comercial (Cambio de plan, cancelación)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentPriority">Prioridad *</label>
+                        <select id="incidentPriority" name="prioridad" required>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta (Urgente)</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="incidentZone">Zona</label>
+                        <input type="text" id="incidentZone" name="zona" placeholder="Se autocompletará">
+                    </div>
+                    <div class="form-group">
+                        <label for="incidentPhone">Teléfono</label>
+                        <input type="tel" id="incidentPhone" name="telefono" placeholder="Se autocompletará">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="incidentDescription">Descripción del Problema *</label>
+                    <textarea id="incidentDescription" name="descripcion" rows="4" required placeholder="Describe detalladamente el problema reportado por el cliente"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('incidentModal')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Registrar Incidente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal form {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .form-actions button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 20px;
+            }
+        }
+    </style>
+
+    <script>
+        let allClients = [];
+        let filteredClients = [];
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Búsqueda
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+
+            // Chat
+            document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendChatMessage();
+            });
+
+            // Actualizar datos
+            document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+
+            // Filtro por zona
+            document.getElementById('zoneFilter').addEventListener('change', filterByZone);
+
+            // Botones de modales
+            document.getElementById('addClientBtn').addEventListener('click', () => openModal('clientModal'));
+            document.getElementById('addProspectBtn').addEventListener('click', () => openModal('prospectModal'));
+            document.getElementById('addIncidentBtn').addEventListener('click', () => openModal('incidentModal'));
+
+            // Formularios
+            document.getElementById('clientForm').addEventListener('submit', submitClientForm);
+            document.getElementById('prospectForm').addEventListener('submit', submitProspectForm);
+            document.getElementById('incidentForm').addEventListener('submit', submitIncidentForm);
+
+            // Auto-completar cliente en incidentes
+            document.getElementById('incidentClientId').addEventListener('blur', autoCompleteClientInfo);
+        }
+
+        async function loadDashboardData() {
+            try {
+                document.getElementById('loadingClients').classList.add('show');
+                
+                const response = await fetch('/api/clients');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allClients = data.data;
+                    filteredClients = [...allClients];
+                    
+                    updateStats();
+                    renderClientsTable();
+                    populateZoneFilter();
+                }
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                addChatMessage('bot', 'Error al cargar los datos. Por favor, intenta de nuevo.');
+            } finally {
+                document.getElementById('loadingClients').classList.remove('show');
+            }
+        }
+
+        function updateStats() {
+            const totalClients = allClients.length;
+            const activeClients = allClients.filter(client => 
+                client['Activo (SI/NO)'].toLowerCase() === 'si'
+            ).length;
+            
+            const zones = [...new Set(allClients.map(client => client.Zona))].filter(zone => zone);
+            const totalRevenue = allClients.reduce((sum, client) => {
+                const pago = parseFloat(client.Pago) || 0;
+                return sum + pago;
+            }, 0);
+
+            document.getElementById('totalClients').textContent = totalClients.toLocaleString();
+            document.getElementById('activeClients').textContent = activeClients.toLocaleString();
+            document.getElementById('totalZones').textContent = zones.length;
+            document.getElementById('monthlyRevenue').textContent = `$${totalRevenue.toLocaleString()}`;
+        }
+
+        function renderClientsTable() {
+            const tbody = document.getElementById('clientsTableBody');
+            tbody.innerHTML = '';
+
+            filteredClients.slice(0, 50).forEach(client => {
+                const row = document.createElement('tr');
+                const isActive = client['Activo (SI/NO)'].toLowerCase() === 'si';
+                
+                row.innerHTML = `
+                    <td><strong>${client['ID Cliente'] || 'N/A'}</strong></td>
+                    <td>${client.Nombre}</td>
+                    <td><i class="fas fa-map-marker-alt" style="color: #667eea;"></i> ${client.Zona}</td>
+                    <td><i class="fas fa-phone" style="color: #667eea;"></i> ${client.Teléfono || 'N/A'}</td>
+                    <td>${client.Propietario || 'N/A'}</td>
+                    <td>
+                        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                            ${isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn btn-secondary" onclick="viewClient('${client['ID Cliente']}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (filteredClients.length > 50) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                        Mostrando 50 de ${filteredClients.length} clientes. Use la búsqueda para filtrar resultados.
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        function populateZoneFilter() {
+            const select = document.getElementById('zoneFilter');
+            const zones = [...new Set(allClients.map(client => client.Zona))].filter(zone => zone).sort();
+            
+            select.innerHTML = '<option value="">Todas las zonas</option>';
+            zones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone;
+                option.textContent = zone;
+                select.appendChild(option);
+            });
+        }
+
+        function filterByZone() {
+            const selectedZone = document.getElementById('zoneFilter').value;
+            
+            if (selectedZone) {
+                filteredClients = allClients.filter(client => client.Zona === selectedZone);
+            } else {
+                filteredClients = [...allClients];
+            }
+            
+            renderClientsTable();
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                filteredClients = [...allClients];
+                renderClientsTable();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/clients/search/${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    filteredClients = data.data;
+                    renderClientsTable();
+                    
+                    addChatMessage('bot', 
+                        `Encontré ${data.count} cliente(s) que coinciden con "${query}"`
+                    );
+                }
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+                addChatMessage('bot', 'Error al realizar la búsqueda.');
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            addChatMessage('user', message);
+            input.value = '';
+
+            document.getElementById('chatLoading').classList.add('show');
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                addChatMessage('bot', data.response);
+                
+                // Si el chat devolvió datos actualizados, refrescar la vista
+                if (data.type === 'clients_list' || data.type === 'client_search') {
+                    if (data.data && data.data.clients) {
+                        filteredClients = data.data.clients;
+                        renderClientsTable();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error en chat:', error);
+                addChatMessage('bot', 'Lo siento, ocurrió un error. Intenta de nuevo.');
+            } finally {
+                document.getElementById('chatLoading').classList.remove('show');
+            }
+        }
+
+        function addChatMessage(sender, message) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            // Convertir markdown básico a HTML
+            let formattedMessage = message
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = formattedMessage;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function viewClient(clientId) {
+            const client = allClients.find(c => c['ID Cliente'] === clientId);
+            if (client) {
+                const message = `Información del cliente ${client.Nombre} (${clientId})`;
+                document.getElementById('chatInput').value = message;
+                sendChatMessage();
+            }
+        }
+
+        // === FUNCIONES DE MODALES ===
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Limpiar formularios
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) form.reset();
+        }
+
+        // Cerrar modal al hacer click fuera
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // === FUNCIONES DE FORMULARIOS ===
+
+        async function submitClientForm(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const clientData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(clientData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    addChatMessage('bot', `✅ Cliente ${clientData.Nombre} agregado exitosamente`);
+                    closeModal('clientModal');
+                    loadDashboardData(); // Recargar datos
+                } else {
+                    addChatMessage('bot', `❌ Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addChatMessage('bot', '❌ Error al agregar cliente');
+            }
+        }
+
+        async function submitProspectForm(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const prospectData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/prospects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(prospectData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    addChatMessage('bot', `✅ Prospecto ${prospectData.Nombre} agregado exitosamente`);
+                    closeModal('prospectModal');
+                } else {
+                    addChatMessage('bot', `❌ Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addChatMessage('bot', '❌ Error al agregar prospecto');
+            }
+        }
+
+        async function submitIncidentForm(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const incidentData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/incidents', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(incidentData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    addChatMessage('bot', `✅ Incidente registrado para ${incidentData.cliente_nombre}`);
+                    closeModal('incidentModal');
+                } else {
+                    addChatMessage('bot', `❌ Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addChatMessage('bot', '❌ Error al registrar incidente');
+            }
+        }
+
+        // Auto-completar información del cliente en incidentes
+        async function autoCompleteClientInfo() {
+            const clientId = document.getElementById('incidentClientId').value.trim();
+            if (!clientId) return;
+
+            const client = allClients.find(c => c['ID Cliente'].toLowerCase() === clientId.toLowerCase());
+            if (client) {
+                document.getElementById('incidentClientName').value = client.Nombre;
+                document.getElementById('incidentZone').value = client.Zona || '';
+                document.getElementById('incidentPhone').value = client.Teléfono || '';
+            } else {
+                // Buscar en el servidor
+                try {
+                    const response = await fetch(`/api/clients/search/${encodeURIComponent(clientId)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data.length > 0) {
+                        const client = data.data[0];
+                        document.getElementById('incidentClientName').value = client.Nombre;
+                        document.getElementById('incidentZone').value = client.Zona || '';
+                        document.getElementById('incidentPhone').value = client.Teléfono || '';
+                    }
+                } catch (error) {
+                    console.error('Error buscando cliente:', error);
+                }
+            }
+        }
+    </script>
 </body>
 </html>
