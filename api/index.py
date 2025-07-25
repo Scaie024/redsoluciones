@@ -42,16 +42,20 @@ frontend_dir = current_dir / "frontend"
 if frontend_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(frontend_dir / "assets")), name="assets")
 
-# Importar servicio de Google Sheets
+# Importar servicio de Google Sheets y agente Carlos
 try:
     from backend.app.services.sheets.service import SheetsServiceV2
+    from backend.app.services.smart_agent import SmartISPAgent
     sheets_service = SheetsServiceV2()
+    carlos_agent = SmartISPAgent(sheets_service=sheets_service)
     SHEETS_CONNECTED = True
     print("✅ Servicio de Google Sheets inicializado")
+    print("🤖 Agente Carlos inicializado")
 except Exception as e:
-    print(f"⚠️ Error inicializando Google Sheets: {e}")
+    print(f"⚠️ Error inicializando servicios: {e}")
     SHEETS_CONNECTED = False
     sheets_service = None
+    carlos_agent = None
 
 # ==========================================
 # RUTAS FRONTEND
@@ -246,18 +250,34 @@ async def get_estadisticas():
 
 @app.post("/api/chat")
 async def chat_ai(request: Request):
-    """Endpoint para el chatbot con IA"""
+    """Chat con el agente Carlos usando Gemini AI"""
     try:
         data = await request.json()
         message = data.get("message", "")
         
-        # Respuesta simulada - aquí integrarías con Gemini AI
-        response = f"Procesando consulta: '{message}'. Sistema Red Soluciones ISP operativo. ¿En qué más puedo ayudarte?"
+        if carlos_agent:
+            # Usar el agente Carlos real
+            try:
+                response = carlos_agent.process_query(message)
+                return JSONResponse({
+                    "success": True,
+                    "response": response.get('response', 'Lo siento, no pude procesar tu mensaje.'),
+                    "type": response.get('type', 'general'),
+                    "data": response.get('data', {}),
+                    "agent": "Carlos - Red Soluciones ISP",
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as agent_error:
+                print(f"Error con agente Carlos: {agent_error}")
+        
+        # Respuesta de respaldo
+        response = f"Soy Carlos, tu asistente de Red Soluciones ISP. Procesando: '{message}'. Sistema operativo. ¿En qué más puedo ayudarte?"
         
         return JSONResponse({
             "success": True,
             "response": response,
             "type": "general",
+            "agent": "Carlos (modo básico)",
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
@@ -419,6 +439,75 @@ async def create_incident(request: Request):
         })
     except Exception as e:
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+# ==========================================
+# TELEGRAM BOT WEBHOOK
+# ==========================================
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(request: Request):
+    """Webhook para el bot de Telegram - integrado con Carlos"""
+    try:
+        update_data = await request.json()
+        print(f"📱 Telegram webhook recibido: {update_data}")
+        
+        # Extraer mensaje
+        if "message" in update_data:
+            message = update_data["message"]
+            chat_id = message["chat"]["id"]
+            user_message = message.get("text", "")
+            
+            if carlos_agent and user_message:
+                # Procesar con Carlos
+                try:
+                    response = carlos_agent.process_query(user_message)
+                    response_text = response.get('response', 'Lo siento, no pude procesar tu mensaje.')
+                except Exception as agent_error:
+                    print(f"Error con Carlos en Telegram: {agent_error}")
+                    response_text = f"Soy Carlos de Red Soluciones ISP. Procesando: '{user_message}'. ¿En qué puedo ayudarte?"
+            else:
+                response_text = "¡Hola! Soy Carlos, tu asistente de Red Soluciones ISP. ¿En qué puedo ayudarte?"
+            
+            # Enviar respuesta a Telegram
+            import requests
+            telegram_api_url = f"https://api.telegram.org/bot{os.environ.get('TELEGRAM_BOT_TOKEN')}/sendMessage"
+            
+            requests.post(telegram_api_url, json={
+                "chat_id": chat_id,
+                "text": response_text,
+                "parse_mode": "Markdown"
+            })
+            
+            return JSONResponse({"status": "message_sent"})
+        
+        return JSONResponse({"status": "no_message"})
+        
+    except Exception as e:
+        print(f"Error en Telegram webhook: {e}")
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/telegram/setup")
+async def setup_telegram_webhook():
+    """Configurar webhook de Telegram"""
+    try:
+        import requests
+        bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+        webhook_url = "https://redsoluciones.vercel.app/api/telegram/webhook"  # Cambiar por tu URL de Vercel
+        
+        telegram_api_url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
+        
+        response = requests.post(telegram_api_url, json={
+            "url": webhook_url
+        })
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Webhook configurado",
+            "telegram_response": response.json()
+        })
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 # ==========================================
 # MANEJO DE ERRORES
