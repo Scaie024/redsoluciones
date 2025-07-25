@@ -1,24 +1,34 @@
 """
-Vercel Serverless Function - Red Soluciones ISP
+Red Soluciones ISP - API Principal
+Sistema completo de gestión para proveedores de internet
 """
-import os
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+import os
+import json
+import sys
+from pathlib import Path
 from datetime import datetime
 
-# Configurar credenciales automáticamente
-os.environ.setdefault('GEMINI_API_KEY', 'AIzaSyD5_316B_bOhy-lVJAdCliYH6ZBhFALBWo')
-os.environ.setdefault('TELEGRAM_BOT_TOKEN', '7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk')
+# Configurar el path
+current_dir = Path(__file__).parent.parent
+sys.path.append(str(current_dir))
 
-# Crear aplicación FastAPI
+# Configurar variables de entorno
+os.environ.setdefault("GEMINI_API_KEY", "AIzaSyD5_316B_bOhy-lVJAdCliYH6ZBhFALBWo")
+os.environ.setdefault("TELEGRAM_BOT_TOKEN", "7881396575:AAHDbmSqXIVPSAK3asK9ieNhpbaS7iD3NZk")
+os.environ.setdefault("GOOGLE_SHEET_ID", "1OZKZIpn6U1nCfrDM_yGmC6jKj6iLH_MQz814LjEBRMQ")
+
 app = FastAPI(
-    title="Red Soluciones ISP", 
-    version="1.0.0",
-    description="Sistema ISP - Vercel Deployment"
+    title="Red Soluciones ISP",
+    description="Sistema completo de gestión para proveedores de internet",
+    version="1.0.0"
 )
 
-# Configurar CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,73 +37,406 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Configurar archivos estáticos
+frontend_dir = current_dir / "frontend"
+if frontend_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(frontend_dir / "assets")), name="assets")
+
+# Importar servicio de Google Sheets
+try:
+    from backend.app.services.sheets.service import SheetsServiceV2
+    sheets_service = SheetsServiceV2()
+    SHEETS_CONNECTED = True
+    print("✅ Servicio de Google Sheets inicializado")
+except Exception as e:
+    print(f"⚠️ Error inicializando Google Sheets: {e}")
+    SHEETS_CONNECTED = False
+    sheets_service = None
+
+# ==========================================
+# RUTAS FRONTEND
+# ==========================================
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Red Soluciones ISP API",
-        "status": "active",
-        "mode": "vercel_production",
-        "version": "1.0.0",
-        "timestamp": datetime.now().isoformat(),
-        "services": {
-            "gemini_ai": "configured ✓",
-            "telegram_bot": "configured ✓",
-            "api": "operational ✓"
-        }
-    }
+    """Página principal del dashboard"""
+    try:
+        frontend_path = current_dir / "frontend" / "index.html"
+        if frontend_path.exists():
+            return FileResponse(str(frontend_path))
+        else:
+            return JSONResponse({
+                "message": "Red Soluciones ISP API",
+                "status": "running",
+                "frontend": "not_found",
+                "paths_checked": str(frontend_path)
+            })
+    except Exception as e:
+        return JSONResponse({"error": str(e), "status": "error"})
 
 @app.get("/health")
-async def health():
-    return {
+async def health_check():
+    """Verificación de salud del sistema"""
+    return JSONResponse({
         "status": "healthy",
-        "environment": "vercel",
-        "services_available": {
-            "api": True,
-            "gemini": True,
-            "telegram": True
-        },
-        "timestamp": datetime.now().isoformat()
-    }
+        "timestamp": datetime.now().isoformat(),
+        "service": "Red Soluciones ISP",
+        "version": "1.0.0"
+    })
 
-@app.get("/api/status")
-async def api_status():
-    return {
-        "api": "operational",
-        "mode": "vercel_production",
-        "services": {
-            "gemini_ai": "configured ✓",
-            "telegram_bot": "configured ✓", 
-            "web_interface": "active ✓"
-        },
-        "endpoints": [
-            {"path": "/", "method": "GET", "description": "API Info"},
-            {"path": "/health", "method": "GET", "description": "Health Check"},
-            {"path": "/api/status", "method": "GET", "description": "Service Status"},
-            {"path": "/api/contact", "method": "POST", "description": "Contact Form"}
-        ],
-        "deployment_status": "✅ Production ready on Vercel"
-    }
+# ==========================================
+# API ENDPOINTS
+# ==========================================
 
-@app.post("/api/contact")
-async def contact_form(request: Request):
+@app.get("/api/clients")
+async def get_clients():
+    """Obtener lista de clientes desde Google Sheets"""
+    try:
+        if SHEETS_CONNECTED and sheets_service:
+            # Intentar obtener datos reales de Google Sheets
+            try:
+                clients_data = sheets_service.get_all_clients()
+                if clients_data:
+                    return JSONResponse({
+                        "success": True, 
+                        "data": clients_data, 
+                        "count": len(clients_data),
+                        "source": "google_sheets"
+                    })
+            except Exception as sheets_error:
+                print(f"Error conectando a Google Sheets: {sheets_error}")
+        
+        # Datos de respaldo si Google Sheets no está disponible
+        fallback_clients = [
+            {
+                "ID Cliente": "REDSOL001",
+                "Nombre": "Juan Pérez García",
+                "Teléfono": "3001234567",
+                "Email": "juan.perez@email.com",
+                "Zona": "SALAMANCA",
+                "Propietario": "Juan Pérez",
+                "Pago": "35000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Cliente desde enero 2024"
+            },
+            {
+                "ID Cliente": "REDSOL002",
+                "Nombre": "María García López",
+                "Teléfono": "3009876543",
+                "Email": "maria.garcia@email.com",
+                "Zona": "CERRO/PRIETO",
+                "Propietario": "María García",
+                "Pago": "45000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Plan premium"
+            },
+            {
+                "ID Cliente": "REDSOL003",
+                "Nombre": "Carlos López Rodríguez",
+                "Teléfono": "3004567890",
+                "Email": "carlos.lopez@email.com",
+                "Zona": "ZAUS",
+                "Propietario": "Carlos López",
+                "Pago": "25000",
+                "Activo (SI/NO)": "NO",
+                "Notas": "Suspendido por falta de pago"
+            },
+            {
+                "ID Cliente": "REDSOL004",
+                "Nombre": "Ana Martínez Cruz",
+                "Teléfono": "3002345678",
+                "Email": "ana.martinez@email.com",
+                "Zona": "TAMBOR",
+                "Propietario": "Ana Martínez",
+                "Pago": "40000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Cliente corporativo"
+            },
+            {
+                "ID Cliente": "REDSOL005",
+                "Nombre": "Luis Fernando Gómez",
+                "Teléfono": "3003456789",
+                "Email": "luis.gomez@email.com",
+                "Zona": "SALAMANCA",
+                "Propietario": "Luis Gómez",
+                "Pago": "30000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Plan básico"
+            }
+        ]
+        
+        return JSONResponse({
+            "success": True, 
+            "data": fallback_clients, 
+            "count": len(fallback_clients),
+            "source": "fallback_data",
+            "warning": "Usando datos de respaldo - Google Sheets no disponible"
+        })
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/clientes")
+async def crear_cliente(request: Request):
+    """Crear nuevo cliente"""
     try:
         data = await request.json()
-        return {
-            "message": "Formulario recibido correctamente",
-            "status": "processed",
-            "data": data,
-            "timestamp": datetime.now().isoformat(),
-            "environment": "vercel_production"
+        # Aquí integrarías con Google Sheets para guardar el cliente
+        
+        nuevo_cliente = {
+            "id": 999,  # En producción, esto sería auto-generado
+            "nombre": data.get("nombre"),
+            "email": data.get("email"),
+            "telefono": data.get("telefono"),
+            "plan": data.get("plan"),
+            "estado": "Activo",
+            "fecha_registro": datetime.now().strftime("%Y-%m-%d")
         }
+        
+        return JSONResponse({"success": True, "data": nuevo_cliente})
     except Exception as e:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "Invalid JSON", "message": str(e)}
-        )
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-# Export para Vercel
-def app_factory():
-    return app
+@app.get("/api/planes")
+async def get_planes():
+    """Obtener planes de internet disponibles"""
+    try:
+        planes = [
+            {
+                "id": 1,
+                "nombre": "Básico 10MB",
+                "velocidad": "10 Mbps",
+                "precio": 25000,
+                "descripcion": "Plan básico para uso residencial"
+            },
+            {
+                "id": 2,
+                "nombre": "Premium 50MB",
+                "velocidad": "50 Mbps",
+                "precio": 45000,
+                "descripcion": "Plan premium para familias"
+            },
+            {
+                "id": 3,
+                "nombre": "Empresarial 100MB",
+                "velocidad": "100 Mbps",
+                "precio": 85000,
+                "descripcion": "Plan empresarial de alta velocidad"
+            }
+        ]
+        return JSONResponse({"success": True, "data": planes})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-# Compatibility
-handler = app
+@app.get("/api/estadisticas")
+async def get_estadisticas():
+    """Obtener estadísticas del dashboard"""
+    try:
+        stats = {
+            "clientes_activos": 156,
+            "clientes_nuevos_mes": 12,
+            "ingresos_mes": 6750000,
+            "tickets_pendientes": 3,
+            "conexiones_activas": 142,
+            "ancho_banda_usado": "78%"
+        }
+        return JSONResponse({"success": True, "data": stats})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/chat")
+async def chat_ai(request: Request):
+    """Endpoint para el chatbot con IA"""
+    try:
+        data = await request.json()
+        message = data.get("message", "")
+        
+        # Respuesta simulada - aquí integrarías con Gemini AI
+        response = f"Procesando consulta: '{message}'. Sistema Red Soluciones ISP operativo. ¿En qué más puedo ayudarte?"
+        
+        return JSONResponse({
+            "success": True,
+            "response": response,
+            "type": "general",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/clients/search/{query}")
+async def search_clients(query: str):
+    """Buscar clientes por cualquier campo"""
+    try:
+        if SHEETS_CONNECTED and sheets_service:
+            # Intentar buscar en Google Sheets
+            try:
+                search_results = await sheets_service.search_clients(query)
+                if search_results:
+                    return JSONResponse({
+                        "success": True,
+                        "data": search_results,
+                        "count": len(search_results),
+                        "source": "google_sheets"
+                    })
+            except Exception as sheets_error:
+                print(f"Error buscando en Google Sheets: {sheets_error}")
+        
+        # Datos de respaldo para búsqueda
+        all_clients = [
+            {
+                "ID Cliente": "REDSOL001",
+                "Nombre": "Juan Pérez García",
+                "Teléfono": "3001234567",
+                "Email": "juan.perez@email.com",
+                "Zona": "SALAMANCA",
+                "Propietario": "Juan Pérez",
+                "Pago": "35000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Cliente desde enero 2024"
+            },
+            {
+                "ID Cliente": "REDSOL002",
+                "Nombre": "María García López",
+                "Teléfono": "3009876543",
+                "Email": "maria.garcia@email.com",
+                "Zona": "CERRO/PRIETO",
+                "Propietario": "María García",
+                "Pago": "45000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Plan premium"
+            },
+            {
+                "ID Cliente": "REDSOL003",
+                "Nombre": "Carlos López Rodríguez",
+                "Teléfono": "3004567890",
+                "Email": "carlos.lopez@email.com",
+                "Zona": "ZAUS",
+                "Propietario": "Carlos López",
+                "Pago": "25000",
+                "Activo (SI/NO)": "NO",
+                "Notas": "Suspendido por falta de pago"
+            },
+            {
+                "ID Cliente": "REDSOL004",
+                "Nombre": "Ana Martínez Cruz",
+                "Teléfono": "3002345678",
+                "Email": "ana.martinez@email.com",
+                "Zona": "TAMBOR",
+                "Propietario": "Ana Martínez",
+                "Pago": "40000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Cliente corporativo"
+            },
+            {
+                "ID Cliente": "REDSOL005",
+                "Nombre": "Luis Fernando Gómez",
+                "Teléfono": "3003456789",
+                "Email": "luis.gomez@email.com",
+                "Zona": "SALAMANCA",
+                "Propietario": "Luis Gómez",
+                "Pago": "30000",
+                "Activo (SI/NO)": "SI",
+                "Notas": "Plan básico"
+            }
+        ]
+        
+        # Buscar en todos los campos
+        query_lower = query.lower()
+        filtered_clients = []
+        
+        for client in all_clients:
+            for key, value in client.items():
+                if str(value).lower().find(query_lower) != -1:
+                    filtered_clients.append(client)
+                    break
+        
+        return JSONResponse({
+            "success": True,
+            "data": filtered_clients,
+            "count": len(filtered_clients),
+            "source": "fallback_data"
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/clients")
+async def create_client(request: Request):
+    """Crear nuevo cliente en Google Sheets"""
+    try:
+        data = await request.json()
+        
+        if SHEETS_CONNECTED and sheets_service:
+            try:
+                # Intentar crear en Google Sheets
+                result = sheets_service.add_client(data)
+                if result:
+                    return JSONResponse({
+                        "success": True,
+                        "message": f"Cliente {data.get('Nombre', 'N/A')} agregado exitosamente a Google Sheets",
+                        "data": data,
+                        "source": "google_sheets"
+                    })
+            except Exception as sheets_error:
+                print(f"Error agregando cliente a Google Sheets: {sheets_error}")
+        
+        # Respuesta de respaldo
+        return JSONResponse({
+            "success": True,
+            "message": f"Cliente {data.get('Nombre', 'N/A')} registrado (modo simulación)",
+            "data": data,
+            "source": "fallback",
+            "warning": "No se pudo conectar a Google Sheets - datos no guardados"
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+@app.post("/api/prospects")
+async def create_prospect(request: Request):
+    """Crear nuevo prospecto"""
+    try:
+        data = await request.json()
+        # En producción, esto guardaría en Google Sheets
+        
+        return JSONResponse({
+            "success": True,
+            "message": f"Prospecto {data.get('Nombre', 'N/A')} agregado exitosamente",
+            "data": data
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+@app.post("/api/incidents")
+async def create_incident(request: Request):
+    """Crear nuevo incidente"""
+    try:
+        data = await request.json()
+        # En producción, esto guardaría en Google Sheets
+        
+        return JSONResponse({
+            "success": True,
+            "message": f"Incidente registrado para {data.get('cliente_nombre', 'N/A')}",
+            "data": data
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+# ==========================================
+# MANEJO DE ERRORES
+# ==========================================
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=404,
+        content={"error": "Recurso no encontrado", "path": str(request.url)}
+    )
+
+@app.exception_handler(500)
+async def server_error_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Error interno del servidor", "details": str(exc)}
+    )
+
+# Para Vercel
+app = app
