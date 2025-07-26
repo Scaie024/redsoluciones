@@ -32,9 +32,8 @@ import traceback
 from datetime import datetime
 
 from backend.app.services.sheets.service import SheetsServiceV2 as SheetsService
-from backend.app.services.smart_agent import SmartISPAgent
+from backend.app.services.consolidated_agent import ConsolidatedISPAgent
 from backend.app.services.context_engine import ContextEngine
-from backend.app.services.enhanced_agent import HomologatedAIAgent
 from backend.app.utils.logger import get_logger
 from backend.app.core.config import settings
 from backend.app.core.user_auth import user_auth
@@ -125,11 +124,14 @@ try:
     if not sheets_service or not sheets_service.gc:
         raise ValueError("❌ No se pudo inicializar Google Sheets")
         
+    # === AGENTES IA CONSOLIDADOS ===
     context_engine = ContextEngine(sheets_service)
-    enhanced_agent = HomologatedAIAgent(context_engine, sheets_service)
-    super_agent = SmartISPAgent(sheets_service)  # Mantener compatibilidad
+    consolidated_agent = ConsolidatedISPAgent(sheets_service, context_engine)
     
-    logger.info(f"✅ {settings.PROJECT_NAME} v{settings.VERSION} - Sistema inicializado correctamente")
+    # === COMPATIBILIDAD ===
+    # Mantener referencias para compatibilidad con código existente
+    enhanced_agent = consolidated_agent  # HomologatedAIAgent -> ConsolidatedISPAgent
+    super_agent = consolidated_agent     # SmartISPAgent -> ConsolidatedISPAgent    logger.info(f"✅ {settings.PROJECT_NAME} v{settings.VERSION} - Sistema inicializado correctamente")
     
 except Exception as e:
     logger.error(f"❌ Error crítico en inicialización: {e}")
@@ -372,16 +374,17 @@ async def chat(msg: ChatMessage):
             logger.info(f"💬 Chat - Usuario: {user_context['name']} ({user_context['user_id']})")
         
         if super_agent:
-            # Usar el nuevo super agente inteligente con contexto
-            response = super_agent.process_query(msg.message, user_context)
+            # Usar el agente consolidado con contexto
+            response = await consolidated_agent.process_query(msg.message, user_context)
             
             # Agregar información de usuario a la respuesta
             response_data = {
-                "response": response["response"],
-                "suggestions": response.get("suggestions", []),
-                "confidence": response.get("confidence", 0.9),
-                "type": response.get("type", "general"),
-                "data": response.get("data", {}),
+                "response": response.message,
+                "suggestions": response.suggestions,
+                "confidence": response.confidence,
+                "type": response.action_type.value,
+                "data": response.data,
+                "execution_time": response.execution_time,
                 "user_context": user_context if user_context else None
             }
             
@@ -757,16 +760,16 @@ async def get_dashboard_kpis():
                 "total_registered": len(clients)
             }
         
-        # Si no hay servicio de sheets, usar agente
-        if super_agent:
-            stats_response = super_agent.process_query("estadísticas")
-            if stats_response.get("data"):
-                data = stats_response["data"]
+        # Si no hay servicio de sheets, usar agente consolidado
+        if consolidated_agent:
+            stats_response = await consolidated_agent.process_query("estadísticas")
+            if stats_response.data:
+                data = stats_response.data
                 return {
                     "total_clients": data.get("total_clients", 0),
-                    "monthly_revenue": data.get("monthly_revenue", 0),
-                    "active_zones": data.get("active_zones", 0),
-                    "premium_percentage": data.get("premium_percentage", 0)
+                    "monthly_revenue": data.get("total_revenue", 0),
+                    "active_zones": len(data.get("zones", {})),
+                    "premium_percentage": data.get("target_achievement", 0)
                 }
         
         # Fallback con datos básicos
@@ -845,12 +848,12 @@ async def dashboard_data():
 async def get_analytics():
     """Get advanced analytics data"""
     try:
-        if super_agent:
-            # Usar el agente para análisis
-            analysis_response = super_agent.process_query("análisis financiero")
+        if consolidated_agent:
+            # Usar el agente consolidado para análisis
+            analysis_response = await consolidated_agent.process_query("análisis financiero")
             
-            if analysis_response.get("data"):
-                return analysis_response["data"]
+            if analysis_response.data:
+                return analysis_response.data
         
         # Fallback básico
         return {
@@ -1096,8 +1099,8 @@ async def enhanced_chat(request: Request):
                 "suggestions": ["Escribir una consulta específica"]
             }
         
-        # Procesar con agente mejorado
-        response = await enhanced_agent.process_query(message, propietario, session_id)
+        # Procesar con agente consolidado
+        response = await consolidated_agent.process_query(message, {"propietario": propietario, "session_id": session_id})
         
         return {
             "success": True,
@@ -1123,25 +1126,25 @@ async def enhanced_chat(request: Request):
 async def get_business_insights(propietario: str):
     """Obtener insights automáticos del negocio"""
     try:
-        if not enhanced_agent:
-            raise HTTPException(status_code=503, detail="Enhanced Agent no disponible")
+        if not consolidated_agent:
+            raise HTTPException(status_code=503, detail="Agente consolidado no disponible")
         
-        insights = await enhanced_agent.get_business_insights(propietario)
+        # Obtener insights usando análisis del agente consolidado
+        insights_response = await consolidated_agent.process_query(f"análisis para {propietario}")
         
         return {
             "success": True,
             "insights": [
                 {
-                    "type": insight.type,
-                    "title": insight.title,
-                    "description": insight.description,
-                    "recommended_action": insight.recommended_action,
-                    "impact_level": insight.impact_level,
-                    "data_source": insight.data_source
+                    "type": "info",
+                    "title": "Análisis de Negocio",
+                    "description": insights_response.message,
+                    "recommended_action": "Revisar métricas regularmente",
+                    "impact_level": "medium",
+                    "data_source": "Agente Consolidado"
                 }
-                for insight in insights
             ],
-            "count": len(insights),
+            "count": 1,
             "generated_at": datetime.now().isoformat()
         }
         
