@@ -19,34 +19,35 @@ def main():
     os.environ["PYTHONPATH"] = str(project_dir)
     
     print(f"📁 Directorio: {project_dir}")
-    print("🌐 Iniciando servidor en http://localhost:8000")
+    print("🌐 Iniciando servidor UNIFICADO en http://localhost:8000")
     print("=" * 50)
     print("✅ Sistema listo!")
     print("📱 Dashboard: http://localhost:8000")
     print("📖 API Docs: http://localhost:8000/docs")
     print("❤️  Health: http://localhost:8000/health")
+    print("🔌 Dashboard API: http://localhost:8000/api/dashboard")
     print("=" * 50)
     
     try:
-        # Importar y ejecutar la aplicación
+        # Importar y ejecutar la aplicación UNIFICADA
         import uvicorn
-        from api.index import app
+        from app import app  # <-- Usar el app.py unificado
         
         uvicorn.run(
             app,
             host="0.0.0.0",
-            port=8000,
+            port=8000, # Puerto estándar unificado
             reload=True,
             log_level="info"
         )
     except ImportError as e:
         print(f"❌ Error de importación: {e}")
         print("📦 Instalando dependencias...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "fastapi", "uvicorn[standard]"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
         print("✅ Dependencias instaladas. Reiniciando...")
         
         import uvicorn
-        from api.index import app
+        from app import app
         
         uvicorn.run(
             app,

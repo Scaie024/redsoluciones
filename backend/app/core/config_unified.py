@@ -38,8 +38,8 @@ class Settings:
     
     # === GOOGLE SHEETS ===
     @property
-    def GOOGLE_CREDENTIALS_PATH(self) -> Optional[Path]:
-        """Buscar credenciales en múltiples ubicaciones"""
+    def GOOGLE_CREDENTIALS_PATH(self) -> Path:
+        """Buscar credenciales en múltiples ubicaciones - OBLIGATORIO"""
         possible_paths = [
             self.BASE_DIR / "service_account.json",
             self.BASE_DIR / "config" / "service_account.json", 
@@ -49,24 +49,39 @@ class Settings:
         for path in possible_paths:
             if path.exists():
                 return path
-        return None
+        
+        raise ValueError(
+            "❌ service_account.json no encontrado. "
+            "Coloque el archivo service_account.json en la raíz del proyecto o configure GOOGLE_APPLICATION_CREDENTIALS"
+        )
     
     @property
     def GOOGLE_SHEET_ID(self) -> str:
         sheet_id = os.getenv("GOOGLE_SHEET_ID", "")
         if not sheet_id:
-            logging.warning("GOOGLE_SHEET_ID not set - using demo sheet")
-            return "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"  # Demo sheet
+            raise ValueError("❌ GOOGLE_SHEET_ID es obligatorio. Configure la variable de entorno.")
         return sheet_id
     
     # === GEMINI AI ===
     @property
     def GEMINI_API_KEY(self) -> str:
-        """Gemini API key for AI agent"""
+        """Gemini API key for AI agent - OPCIONAL con fallback"""
         api_key = os.getenv("GEMINI_API_KEY", "")
         if not api_key:
-            logging.warning("GEMINI_API_KEY not set - AI features will be limited")
+            # Fallback graceful en lugar de error
+            logging.warning("⚠️ GEMINI_API_KEY no configurado - Sistema funcionará sin IA")
+            return ""
         return api_key
+    
+    # === TELEGRAM BOT ===
+    @property
+    def TELEGRAM_BOT_TOKEN(self) -> str:
+        """Token del bot de Telegram - OPCIONAL"""
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        if not token:
+            logging.warning("⚠️ TELEGRAM_BOT_TOKEN no configurado - Bot de Telegram deshabilitado")
+            return ""
+        return token
     
     # === SEGURIDAD ===
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))

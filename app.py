@@ -1,15 +1,27 @@
 """
-Entry point para Vercel - Red Soluciones ISP
+Red Soluciones ISP - Entry Point Principal
+Punto de entrada unificado para desarrollo y producción
 """
-from api.index import app
 
-# Export para Vercel
-def app_handler(*args, **kwargs):
-    return app
+import sys
+from pathlib import Path
 
-# También exportar directamente
-application = app
+# Configurar path del proyecto
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+
+# Importar aplicación principal desde backend
+from backend.app.main import app
+
+# Exportar para Vercel
+__all__ = ["app"]
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("🚀 Iniciando Red Soluciones ISP...")
+    uvicorn.run(
+        "backend.app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )

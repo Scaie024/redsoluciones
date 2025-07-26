@@ -15,6 +15,34 @@
   --shadow-heavy: 0 8px 25px rgba(0,0,0,0.2);
 }
 
+/* Animaciones para notificaciones */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -433,4 +461,218 @@ body {
   margin: 0.2rem 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+/* === SISTEMA DE AUTENTICACIÓN === */
+
+.user-selection-modal {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+}
+
+.user-selection-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 450px;
+  width: 90%;
+  margin: auto;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.user-selection-header {
+  text-align: center;
+  padding: 2rem 2rem 1rem;
+  background: rgba(255,255,255,0.1);
+}
+
+.company-logo {
+  margin-bottom: 1rem;
+}
+
+.company-logo h2 {
+  margin: 0.5rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.user-selection-header h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.user-selection-header p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
+.user-options {
+  padding: 1rem 2rem 2rem;
+}
+
+.user-option {
+  width: 100%;
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.user-option:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.user-option:last-child {
+  margin-bottom: 0;
+}
+
+.user-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 50%;
+}
+
+.user-info {
+  flex: 1;
+  text-align: left;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.user-role {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.user-option i.fa-chevron-right {
+  color: #999;
+  transition: transform 0.3s ease;
+}
+
+.user-option:hover i.fa-chevron-right {
+  transform: translateX(5px);
+  color: #667eea;
+}
+
+.user-selection-footer {
+  text-align: center;
+  padding: 0 2rem 1.5rem;
+  opacity: 0.7;
+}
+
+.user-selection-footer small {
+  font-size: 0.8rem;
+}
+
+/* === INFORMACIÓN DE USUARIO ACTUAL === */
+
+.current-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 25px;
+  transition: all 0.3s ease;
+}
+
+.current-user:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.current-user .user-icon {
+  font-size: 1.2rem;
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+.current-user .user-name {
+  font-size: 0.95rem;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.logout-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.1);
+}
+
+/* === MENSAJES DE CHAT PERSONALIZADOS === */
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.message-header .user-icon {
+  font-size: 1rem;
+}
+
+.message-content {
+  background: inherit;
+  border-radius: inherit;
+  padding: 0;
+}
+
+/* === RESPONSIVE === */
+
+@media (max-width: 600px) {
+  .user-selection-content {
+    max-width: 350px;
+    margin: 20px;
+  }
+  
+  .user-option {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+  
+  .user-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+  
+  .user-name {
+    font-size: 1rem;
+  }
 }

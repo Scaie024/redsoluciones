@@ -69,7 +69,7 @@ cd redsoluciones
 pip install -r requirements.txt
 
 # Ejecutar servidor
-uvicorn api.index:app --reload
+uvicorn backend.app.main:app --reload --port 8004
 ```
 
 ## 📝 Licencia

@@ -93,8 +93,6 @@ class SheetsServiceV2:
     - El circuit breaker evita sobrecargar el servicio en caso de fallos
     """
     
-    # Configuración de la hoja
-    SHEET_ID = "1OZKZIpn6U1nCfrDM_yGmC6jKj6iLH_MQz814LjEBRMQ"
     
     # Configuración de reintentos
     MAX_RETRIES = 3
@@ -131,7 +129,14 @@ class SheetsServiceV2:
         # Inicializar cliente y hoja de cálculo
         self.gc = None
         self.sheet = None
-        self.sheet_id = self.SHEET_ID
+
+        # Cargar configuración centralizada de forma estricta.
+        try:
+            from backend.app.core.config import settings
+            self.sheet_id = settings.GOOGLE_SHEET_ID
+        except (ImportError, AttributeError):
+            self.logger.critical("CRITICAL: No se pudo cargar la configuración centralizada. Usando fallback a variable de entorno.")
+            self.sheet_id = os.getenv("GOOGLE_SHEET_ID")
         
         # Estado del circuit breaker
         self._circuit_state = {
@@ -820,6 +825,47 @@ class SheetsServiceV2:
         
         return matching_clients
     
+    def get_clients_by_owner(self, owner_name: str, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """Obtener clientes filtrados por propietario"""
+        if not owner_name:
+            return self.get_all_clients(include_inactive)
+        
+        all_clients = self.get_all_clients(include_inactive)
+        owner_filter = owner_name.strip().lower()
+        
+        filtered_clients = []
+        for client in all_clients:
+            client_owner = str(client.get('Propietario', '')).strip().lower()
+            if client_owner == owner_filter:
+                filtered_clients.append(client)
+        
+        self.logger.info(f"📊 Clientes de {owner_name}: {len(filtered_clients)}")
+        return filtered_clients
+    
+    def search_clients_by_owner(self, search_term: str, owner_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Buscar clientes con filtro opcional por propietario"""
+        # Obtener clientes según propietario
+        if owner_name:
+            all_clients = self.get_clients_by_owner(owner_name, include_inactive=True)
+        else:
+            all_clients = self.get_all_clients(include_inactive=True)
+        
+        if not search_term or len(search_term.strip()) < 2:
+            return all_clients
+        
+        search_term = search_term.strip().lower()
+        matching_clients = []
+        search_fields = ["Nombre", "Email", "Zona", "Teléfono", "ID Cliente"]
+        
+        for client in all_clients:
+            for field in search_fields:
+                value = str(client.get(field, "")).strip().lower()
+                if search_term in value and value:
+                    matching_clients.append(client)
+                    break
+        
+        return matching_clients
+    
     def add_client(self, data: Dict[str, str]) -> bool:
         """Agrega cliente con validación y manejo de errores"""
         def _add_row():
@@ -1418,3 +1464,390 @@ class SheetsServiceV2:
         except Exception as e:
             self.logger.error(f"Error updating client: {e}")
             return {"status": "error", "message": str(e)}
+
+    # =============================================
+    # MÉTODOS AVANZADOS PARA IA - CARLOS SUPERINTELIGENTE
+    # =============================================
+
+    def add_client_intelligent(self, name: str, phone: str, zone: str, client_type: str = "cliente") -> Dict[str, Any]:
+        """🤖 Agregar cliente/prospecto con IA integrada"""
+        try:
+            # Generar ID inteligente
+            client_id = self._generate_smart_id(name, zone, client_type)
+            
+            # Determinar plan sugerido basado en zona
+            suggested_plan = self._suggest_plan_by_zone(zone)
+            
+            # Calcular precio
+            price = 350 if suggested_plan == "básico" else 500
+            
+            # Crear registro completo
+            client_data = {
+                "ID": client_id,
+                "Nombre": name.title(),
+                "Teléfono": phone,
+                "Zona": zone.title(),
+                "Plan": suggested_plan,
+                "Precio": price,
+                "Estado": "Activo" if client_type == "cliente" else "Prospecto",
+                "Fecha_Alta": datetime.now().strftime("%Y-%m-%d"),
+                "Observaciones": f"Registrado por Carlos AI - {client_type}",
+                "Tipo": client_type.title()
+            }
+            
+            # Guardar en Google Sheets
+            success = self.add_row(client_data)
+            
+            if success:
+                # Limpiar cache para actualizar datos
+                self.clear_cache("get_all_rows")
+                
+                return {
+                    "success": True,
+                    "client_id": client_id,
+                    "data": client_data,
+                    "suggested_plan": suggested_plan,
+                    "monthly_revenue": price
+                }
+            else:
+                return {"success": False, "error": "Error guardando en Google Sheets"}
+                
+        except Exception as e:
+            self.logger.error(f"Error en add_client_intelligent: {e}")
+            return {"success": False, "error": str(e)}
+
+    def search_clients_intelligent(self, query: str) -> Dict[str, Any]:
+        """🔍 Búsqueda inteligente de clientes con IA"""
+        try:
+            all_clients = self.get_all_rows()
+            
+            if not all_clients:
+                return {"success": False, "results": [], "message": "No hay clientes en la base de datos"}
+            
+            # Búsqueda inteligente
+            results = []
+            query_lower = query.lower()
+            
+            for client in all_clients:
+                # Buscar en múltiples campos
+                search_fields = [
+                    client.get('Nombre', '').lower(),
+                    client.get('Teléfono', '').lower(),
+                    client.get('Zona', '').lower(),
+                    client.get('Plan', '').lower(),
+                    client.get('Estado', '').lower(),
+                    str(client.get('ID', '')).lower()
+                ]
+                
+                # Coincidencia en cualquier campo
+                if any(query_lower in field for field in search_fields):
+                    # Calcular relevancia
+                    relevance = self._calculate_search_relevance(query_lower, client)
+                    client['relevance'] = relevance
+                    results.append(client)
+            
+            # Ordenar por relevancia
+            results.sort(key=lambda x: x.get('relevance', 0), reverse=True)
+            
+            return {
+                "success": True,
+                "results": results[:10],  # Top 10 resultados
+                "total_found": len(results),
+                "query": query
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error en search_clients_intelligent: {e}")
+            return {"success": False, "error": str(e)}
+
+    def get_business_analytics(self) -> Dict[str, Any]:
+        """📊 Análisis inteligente del negocio"""
+        try:
+            all_clients = self.get_all_rows()
+            
+            if not all_clients:
+                return {"success": False, "message": "No hay datos para analizar"}
+            
+            analytics = {
+                "total_clients": len(all_clients),
+                "active_clients": len([c for c in all_clients if c.get('Estado', '').lower() == 'activo']),
+                "prospects": len([c for c in all_clients if c.get('Estado', '').lower() == 'prospecto']),
+                "zones": {},
+                "plans": {},
+                "monthly_revenue": 0,
+                "revenue_breakdown": {},
+                "top_zones": [],
+                "growth_potential": 0
+            }
+            
+            # Análisis por zonas
+            for client in all_clients:
+                zone = client.get('Zona', 'Sin zona')
+                plan = client.get('Plan', 'Sin plan')
+                price = float(client.get('Precio', 0))
+                
+                # Conteo por zonas
+                analytics["zones"][zone] = analytics["zones"].get(zone, 0) + 1
+                
+                # Conteo por planes
+                analytics["plans"][plan] = analytics["plans"].get(plan, 0) + 1
+                
+                # Ingresos solo de clientes activos
+                if client.get('Estado', '').lower() == 'activo':
+                    analytics["monthly_revenue"] += price
+                    analytics["revenue_breakdown"][zone] = analytics["revenue_breakdown"].get(zone, 0) + price
+            
+            # Top zonas por clientes
+            analytics["top_zones"] = sorted(
+                analytics["zones"].items(), 
+                key=lambda x: x[1], 
+                reverse=True
+            )[:5]
+            
+            # Potencial de crecimiento (prospectos)
+            analytics["growth_potential"] = analytics["prospects"] * 350  # Estimación conservadora
+            
+            # Insights inteligentes
+            analytics["insights"] = self._generate_business_insights(analytics)
+            
+            return {"success": True, "analytics": analytics}
+            
+        except Exception as e:
+            self.logger.error(f"Error en get_business_analytics: {e}")
+            return {"success": False, "error": str(e)}
+
+    def manage_prospects_intelligent(self, action: str = "list") -> Dict[str, Any]:
+        """🎯 Gestión inteligente de prospectos"""
+        try:
+            all_clients = self.get_all_rows()
+            prospects = [c for c in all_clients if c.get('Estado', '').lower() == 'prospecto']
+            
+            if action == "list":
+                return {
+                    "success": True,
+                    "prospects": prospects,
+                    "total": len(prospects),
+                    "recommendations": self._get_prospect_recommendations(prospects)
+                }
+            
+            elif action == "priority":
+                # Priorizar prospectos
+                priority_prospects = self._prioritize_prospects(prospects)
+                return {
+                    "success": True,
+                    "priority_prospects": priority_prospects,
+                    "total": len(priority_prospects)
+                }
+            
+            elif action == "convert_ready":
+                # Prospectos listos para conversión
+                ready_prospects = [p for p in prospects if self._is_ready_to_convert(p)]
+                return {
+                    "success": True,
+                    "ready_prospects": ready_prospects,
+                    "conversion_potential": len(ready_prospects) * 350
+                }
+            
+        except Exception as e:
+            self.logger.error(f"Error en manage_prospects_intelligent: {e}")
+            return {"success": False, "error": str(e)}
+
+    def update_client_intelligent(self, client_id: str, field: str, value: str) -> Dict[str, Any]:
+        """✏️ Actualización inteligente de clientes"""
+        try:
+            # Buscar cliente por ID
+            all_clients = self.get_all_rows()
+            client_found = None
+            row_index = None
+            
+            for i, client in enumerate(all_clients):
+                if str(client.get('ID', '')) == str(client_id):
+                    client_found = client
+                    row_index = i + 2  # +2 porque la primera fila son headers y las filas empiezan en 2
+                    break
+            
+            if not client_found:
+                return {"success": False, "error": f"Cliente {client_id} no encontrado"}
+            
+            # Validar campo
+            valid_fields = ["Nombre", "Teléfono", "Zona", "Plan", "Precio", "Estado", "Observaciones"]
+            if field not in valid_fields:
+                return {"success": False, "error": f"Campo {field} no válido. Campos válidos: {valid_fields}"}
+            
+            # Actualizar datos
+            updated_data = client_found.copy()
+            updated_data[field] = value
+            updated_data["Fecha_Modificacion"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+            
+            # Guardar cambios
+            success = self.update_row(row_index, updated_data)
+            
+            if success:
+                self.clear_cache("get_all_rows")
+                return {
+                    "success": True,
+                    "client_id": client_id,
+                    "field_updated": field,
+                    "new_value": value,
+                    "client_data": updated_data
+                }
+            else:
+                return {"success": False, "error": "Error actualizando en Google Sheets"}
+                
+        except Exception as e:
+            self.logger.error(f"Error en update_client_intelligent: {e}")
+            return {"success": False, "error": str(e)}
+
+    # =============================================
+    # MÉTODOS AUXILIARES PARA IA
+    # =============================================
+
+    def _generate_smart_id(self, name: str, zone: str, client_type: str) -> str:
+        """Generar ID inteligente"""
+        type_prefix = "CLI" if client_type == "cliente" else "PROS"
+        name_part = name[:3].upper().replace(" ", "")
+        zone_part = zone[:2].upper()
+        timestamp = datetime.now().strftime("%m%d")
+        return f"{type_prefix}{name_part}{zone_part}{timestamp}"
+
+    def _suggest_plan_by_zone(self, zone: str) -> str:
+        """Sugerir plan basado en zona"""
+        premium_zones = ["centro", "residencial", "industrial"]
+        return "premium" if zone.lower() in premium_zones else "básico"
+
+    def _calculate_search_relevance(self, query: str, client: Dict) -> float:
+        """Calcular relevancia de búsqueda"""
+        relevance = 0.0
+        
+        # Nombre tiene mayor peso
+        if query in client.get('Nombre', '').lower():
+            relevance += 3.0
+        
+        # Teléfono exacto
+        if query in client.get('Teléfono', ''):
+            relevance += 2.0
+            
+        # Zona
+        if query in client.get('Zona', '').lower():
+            relevance += 1.5
+            
+        # ID exacto
+        if query == str(client.get('ID', '')).lower():
+            relevance += 5.0
+            
+        return relevance
+
+    def _generate_business_insights(self, analytics: Dict) -> List[str]:
+        """Generar insights inteligentes del negocio"""
+        insights = []
+        
+        # Insight de ingresos
+        monthly_revenue = analytics.get('monthly_revenue', 0)
+        insights.append(f"💰 Ingresos mensuales: ${monthly_revenue:,.0f}")
+        
+        # Insight de crecimiento
+        prospects = analytics.get('prospects', 0)
+        if prospects > 0:
+            potential = prospects * 350
+            insights.append(f"🚀 Potencial de crecimiento: {prospects} prospectos = ${potential:,.0f}")
+        
+        # Insight de zona top
+        top_zones = analytics.get('top_zones', [])
+        if top_zones:
+            top_zone, client_count = top_zones[0]
+            insights.append(f"🏆 Zona líder: {top_zone} con {client_count} clientes")
+        
+        # Insight de conversión
+        total_clients = analytics.get('total_clients', 0)
+        active_clients = analytics.get('active_clients', 0)
+        if total_clients > 0:
+            conversion_rate = (active_clients / total_clients) * 100
+            insights.append(f"📈 Tasa de conversión: {conversion_rate:.1f}%")
+        
+        return insights
+
+    def _get_prospect_recommendations(self, prospects: List[Dict]) -> List[str]:
+        """Recomendaciones para prospectos"""
+        recommendations = []
+        
+        if len(prospects) > 10:
+            recommendations.append("📞 Priorizar llamadas a prospectos más recientes")
+        
+        if len(prospects) > 0:
+            # Agrupar por zona
+            zones = {}
+            for p in prospects:
+                zone = p.get('Zona', 'Sin zona')
+                zones[zone] = zones.get(zone, 0) + 1
+            
+            top_zone = max(zones.items(), key=lambda x: x[1]) if zones else None
+            if top_zone:
+                recommendations.append(f"🎯 Concentrar esfuerzos en zona {top_zone[0]} ({top_zone[1]} prospectos)")
+        
+        return recommendations
+
+    def _prioritize_prospects(self, prospects: List[Dict]) -> List[Dict]:
+        """Priorizar prospectos por fecha y zona"""
+        for prospect in prospects:
+            score = 0
+            
+            # Más reciente = mayor prioridad
+            date_str = prospect.get('Fecha_Alta', '')
+            if date_str:
+                try:
+                    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                    days_old = (datetime.now() - date_obj).days
+                    score += max(0, 30 - days_old)  # Máximo 30 puntos por ser reciente
+                except:
+                    pass
+            
+            # Zona premium = mayor prioridad
+            zone = prospect.get('Zona', '').lower()
+            if zone in ["centro", "residencial", "industrial"]:
+                score += 20
+            
+            prospect['priority_score'] = score
+        
+        return sorted(prospects, key=lambda x: x.get('priority_score', 0), reverse=True)
+
+    def _is_ready_to_convert(self, prospect: Dict) -> bool:
+        """Determinar si un prospecto está listo para conversión"""
+        # Criterios simples: tiene todos los datos básicos
+        required_fields = ['Nombre', 'Teléfono', 'Zona']
+        return all(prospect.get(field) for field in required_fields)
+
+    def add_incident_intelligent(self, incident_data: Dict[str, Any]) -> Dict[str, Any]:
+        """🛠️ Agregar incidente con IA integrada"""
+        try:
+            # Preparar datos para Google Sheets
+            incident_row = {
+                "ID": incident_data.get('id'),
+                "Descripcion": incident_data.get('description'),
+                "Categoria": incident_data.get('category'),
+                "Prioridad": incident_data.get('priority'),
+                "Estado": incident_data.get('status', 'Abierto'),
+                "Fecha_Creacion": incident_data.get('created_at', datetime.now().strftime("%Y-%m-%d %H:%M")),
+                "Consulta_Original": incident_data.get('original_query', ''),
+                "Asignado_A": "",
+                "Observaciones": "Creado por Carlos AI"
+            }
+            
+            # Intentar guardar en Google Sheets
+            success = self.add_row(incident_row)
+            
+            if success:
+                return {
+                    "success": True,
+                    "incident_id": incident_data.get('id'),
+                    "data": incident_row,
+                    "message": "Incidente guardado en Google Sheets"
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Error guardando incidente en Google Sheets"
+                }
+                
+        except Exception as e:
+            self.logger.error(f"Error en add_incident_intelligent: {e}")
+            return {"success": False, "error": str(e)}
