@@ -1,9 +1,8 @@
 """
-Sistema de Autenticación Básico - Red Soluciones ISP
-Implementación simple y segura para el sistema
+Sistema de Autenticación Simple - Red Soluciones ISP
+Solo para propietarios autorizados, sin contraseñas
 """
 
-import hashlib
 import secrets
 import logging
 from typing import Optional, Dict, Any
@@ -12,43 +11,49 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(__name__)
 
 class UserAuth:
-    """Sistema de autenticación básico"""
+    """Sistema de autenticación simple para propietarios"""
     
     def __init__(self):
         self.sessions = {}
-        self.users = {
-            "admin": {
-                "password_hash": self._hash_password("admin123"),
-                "role": "admin",
-                "name": "Administrador"
+        # Propietarios autorizados - solo nombres
+        self.owners = {
+            "carlos": {
+                "name": "Carlos - Propietario Principal",
+                "role": "owner",
+                "permissions": ["all"]
             },
-            "operador": {
-                "password_hash": self._hash_password("op123"),
-                "role": "operator", 
-                "name": "Operador"
+            "admin": {
+                "name": "Administrador del Sistema",
+                "role": "admin", 
+                "permissions": ["all"]
+            },
+            "propietario": {
+                "name": "Propietario Autorizado",
+                "role": "owner",
+                "permissions": ["all"]
             }
         }
     
-    def _hash_password(self, password: str) -> str:
-        """Hash seguro de contraseña"""
-        return hashlib.sha256(password.encode()).hexdigest()
-    
-    def authenticate(self, username: str, password: str) -> Optional[Dict[str, Any]]:
-        """Autentica usuario"""
+    def authenticate_owner(self, owner_name: str) -> Optional[Dict[str, Any]]:
+        """Autentica propietario autorizado"""
         try:
-            user = self.users.get(username)
-            if user and user["password_hash"] == self._hash_password(password):
+            owner_name = owner_name.lower().strip()
+            owner = self.owners.get(owner_name)
+            
+            if owner:
                 session_id = secrets.token_urlsafe(32)
                 self.sessions[session_id] = {
-                    "username": username,
-                    "role": user["role"],
-                    "name": user["name"],
-                    "expires": datetime.now() + timedelta(hours=8)
+                    "owner_name": owner_name,
+                    "role": owner["role"],
+                    "name": owner["name"],
+                    "permissions": owner["permissions"],
+                    "expires": datetime.now() + timedelta(hours=12),
+                    "created": datetime.now()
                 }
-                logger.info(f"Usuario autenticado: {username}")
+                logger.info(f"Propietario autenticado: {owner['name']}")
                 return {
                     "session_id": session_id,
-                    "user": user,
+                    "owner": owner,
                     "success": True
                 }
             return None

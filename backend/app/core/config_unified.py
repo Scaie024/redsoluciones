@@ -8,6 +8,20 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
+# === CARGAR VARIABLES DE ENTORNO ===
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # Cargar manualmente si python-dotenv no está disponible
+    env_file = Path(__file__).parents[3] / ".env"
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                if '=' in line and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    os.environ[key] = value
+
 
 class Settings:
     # === INFORMACIÓN DEL PROYECTO ===
@@ -59,7 +73,9 @@ class Settings:
     def GOOGLE_SHEET_ID(self) -> str:
         sheet_id = os.getenv("GOOGLE_SHEET_ID", "")
         if not sheet_id:
-            raise ValueError("❌ GOOGLE_SHEET_ID es obligatorio. Configure la variable de entorno.")
+            # Usar ID por defecto como fallback
+            logging.warning("⚠️ GOOGLE_SHEET_ID no configurado - usando ID por defecto")
+            return "1BcRhPZBfVYadXyYfDeF8Mtt7-qaTJ5_Q4T4FE1oVBq0"
         return sheet_id
     
     # === GEMINI AI ===

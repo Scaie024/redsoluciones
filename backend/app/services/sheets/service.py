@@ -738,6 +738,22 @@ class SheetsServiceV2:
         if cached_data:
             return cached_data
         
+        # Intentar usar datos enriquecidos primero
+        try:
+            enriched_clients = self.get_enriched_clients()
+            if enriched_clients:
+                # Filtrar por activos si es necesario
+                if not include_inactive:
+                    enriched_clients = [
+                        client for client in enriched_clients 
+                        if str(client.get('Activo (SI/NO)', '')).lower() in ['si', 'sí', 'yes', '1', 'true']
+                    ]
+                
+                self._set_cache(cache_key, enriched_clients)
+                return enriched_clients
+        except Exception as e:
+            self.logger.warning(f"⚠️ Error obteniendo datos enriquecidos, usando método tradicional: {e}")
+        
         def _get_records():
             if self.sheet is None:
                 self.logger.warning("⚠️  self.sheet is None, usando datos offline")
@@ -1851,3 +1867,89 @@ class SheetsServiceV2:
         except Exception as e:
             self.logger.error(f"Error en add_incident_intelligent: {e}")
             return {"success": False, "error": str(e)}
+
+    def get_cobranza_data(self) -> List[Dict[str, Any]]:
+        """
+        Obtener datos de cobranza desde la hoja '02_Cobranza'
+        Returns: Lista de registros de cobranza con información de pagos
+        """
+        try:
+            if not self.gc or not self.sheet_id:
+                raise Exception("Servicio Google Sheets no inicializado")
+            
+            if not self.sheet:
+                raise Exception("Hoja de cálculo no inicializada")
+            
+            # Obtener la hoja de cobranza
+            spreadsheet = self.gc.open_by_key(self.sheet_id)
+            cobranza_sheet = spreadsheet.worksheet("02_Cobranza")
+            
+            # Obtener todas las filas
+            all_rows = cobranza_sheet.get_all_records()
+            
+            self.logger.info(f"📊 Obtenidos {len(all_rows)} registros de cobranza")
+            
+            return all_rows
+            
+        except gspread.WorksheetNotFound:
+            self.logger.warning("⚠️ Hoja '02_Cobranza' no encontrada")
+            return []
+        except Exception as e:
+            self.logger.error(f"❌ Error obteniendo datos de cobranza: {e}")
+            raise
+
+    def get_enriched_clients(self) -> List[Dict[str, Any]]:
+        """
+        Obtener clientes enriquecidos con información de cobranza
+        Combina datos de '01_Clientes' con '02_Cobranza'
+        """
+        try:
+            # Obtener datos de clientes
+            clients = self.get_all_rows()
+            cobranza_data = self.get_cobranza_data()
+            
+            # Crear un mapa de cobranza por ID de cliente
+            cobranza_map = {}
+            current_month = "julio"  # Se puede hacer dinámico
+            current_year = "2025"    # Se puede hacer dinámico
+            
+            for record in cobranza_data:
+                client_id = record.get('ID Cliente', '')
+                mes = record.get('Mes', '')
+                año = record.get('Año', '')
+                
+                # Solo considerar el mes/año actual - convertir año a string para comparación
+                if mes.lower() == current_month and str(año) == current_year:
+                    if client_id not in cobranza_map:
+                        cobranza_map[client_id] = []
+                    cobranza_map[client_id].append(record)
+            
+            # Enriquecer clientes con datos de cobranza
+            enriched_clients = []
+            for client in clients:
+                client_id = client.get('ID Cliente', '')
+                enriched_client = client.copy()
+                
+                # Agregar información de cobranza
+                if client_id in cobranza_map:
+                    cobranza_records = cobranza_map[client_id]
+                    # Tomar el primer (y generalmente único) registro del mes actual
+                    if cobranza_records:
+                        cobranza = cobranza_records[0]
+                        enriched_client['Pago'] = cobranza.get('Monto', '0')
+                        enriched_client['Pagado'] = cobranza.get('Pagado (SI/NO)', 'NO')
+                        enriched_client['Dia_Corte'] = cobranza.get('Día de corte mensual ', '')
+                else:
+                    # Cliente sin datos de cobranza
+                    enriched_client['Pago'] = '0'
+                    enriched_client['Pagado'] = 'NO'
+                    enriched_client['Dia_Corte'] = ''
+                
+                enriched_clients.append(enriched_client)
+            
+            self.logger.info(f"🔗 Clientes enriquecidos: {len(enriched_clients)}")
+            return enriched_clients
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error enriqueciendo clientes: {e}")
+            return clients  # Retornar clientes sin enriquecer como fallback

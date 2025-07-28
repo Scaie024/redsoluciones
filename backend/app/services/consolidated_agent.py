@@ -109,13 +109,11 @@ class ProspectoData:
 class ConsolidatedISPAgent:
     """
     🧠 AGENTE IA EMPRESARIAL CONSOLIDADO
-    
     Unifica TODAS las capacidades de los agentes anteriores:
     - Análisis estratégico empresarial (SmartISPAgent)
-    - Integración completa con contexto (HomologatedAIAgent)  
+    - Integración completa con contexto (HomologatedAIAgent)
     - Procesamiento de lenguaje natural (SuperIntelligentAgent)
     - Motor de contexto empresarial (ContextEngine)
-    
     Capacidades principales:
     - ✅ Alta de clientes y prospectos
     - ✅ Consultas de información empresarial
@@ -123,127 +121,80 @@ class ConsolidatedISPAgent:
     - ✅ Gestión de incidentes
     - ✅ Reportes ejecutivos
     - ✅ Procesamiento de lenguaje natural
-    - ✅ Respuestas con IA generativa
-    """
-    
+
     def __init__(self, sheets_service=None, context_engine=None):
-        """Inicializar agente consolidado"""
         self.sheets_service = sheets_service
         self.context_engine = context_engine
         self.logger = logging.getLogger(__name__)
-        
-        # === CONFIGURACIÓN EMPRESARIAL ===
         self.company = "Red Soluciones ISP"
         self.version = "4.0 Consolidado"
         self.role = "SUPER_ADMINISTRADOR_CONSOLIDADO"
-        
-        # === CONFIGURACIÓN IA ===
         self.ai_model = None
         if GEMINI_AVAILABLE and genai is not None:
             try:
                 self.ai_model = genai.GenerativeModel(
-                    'gemini-1.5-flash',
+                    'gemini-2.5-pro',
                     system_instruction=self._get_consolidated_prompt()
                 )
                 self.logger.info("🧠 IA Consolidada configurada exitosamente")
             except Exception as e:
                 self.logger.error(f"❌ Error configurando IA: {e}")
-        
-        # === CONFIGURACIÓN DE PATRONES ===
         self._setup_patterns()
-        
-        # === MÉTRICAS EMPRESARIALES ===
         self.business_metrics = {
             "target_monthly_revenue": 150000,
             "standard_plan": 350,
             "premium_plan": 500,
             "enterprise_plan": 750,
-            "target_clients": 400,
             "churn_threshold": 5
         }
-        
-        # === MEMORIA DE CONVERSACIÓN ===
         self.conversation_memory = {}
-        
-        # === RESPUESTAS ESTRUCTURADAS ===
         self.fallback_responses = {
-            "greeting": "🎯 Sistema empresarial Red Soluciones ISP operativo. ¿En qué puedo asistirle?",
-            "help": "Comandos disponibles: alta cliente, estadísticas, información cliente, crear incidente, análisis",
-            "unknown": "No pude procesar la solicitud. Intente reformular o use comandos específicos.",
-            "error": "Error en el procesamiento. Revise la sintaxis o contacte soporte técnico."
+            "greeting": "Listo. ¿Qué necesitas?",
+            "help": "Comandos: estadísticas | buscar [nombre] | Cliente: nombre,email,zona,teléfono,pago",
+            "error": "Error. Revisa formato.",
+            "unknown": "No se reconoce el comando. Usa 'ayuda' para ver opciones."
         }
-        
         self.logger.info(f"🧠 Agente Consolidado v{self.version} inicializado exitosamente")
-
     def _get_consolidated_prompt(self) -> str:
-        """Prompt consolidado del sistema para IA"""
-        return """Eres el AGENTE IA EMPRESARIAL CONSOLIDADO de Red Soluciones ISP.
-
-IDENTIDAD:
-- Super Administrador con acceso completo al sistema
-- Experto en gestión ISP y telecomunicaciones
-- Analista de datos empresariales
-- Asistente ejecutivo profesional
-
-PERSONALIDAD:
-- Profesional y directo
-- Orientado a resultados
-- Respuestas concisas pero completas
-- Lenguaje empresarial apropiado
-- Proactivo en sugerencias
-
-CAPACIDADES PRINCIPALES:
-1. 👤 GESTIÓN DE CLIENTES
-   - Alta de clientes: "Cliente: Nombre, email, zona, teléfono, pago"
-   - Consulta de información de clientes
-   - Análisis de patrones de clientes
-
-2. 🎯 GESTIÓN DE PROSPECTOS  
-   - Alta de prospectos: "Prospecto: Nombre, teléfono, zona"
-   - Seguimiento de leads
-   - Conversión de prospectos
-
-3. 📊 ANÁLISIS EMPRESARIAL
-   - Estadísticas en tiempo real
-   - Reportes ejecutivos
-   - Análisis de rentabilidad
-   - Tendencias de negocio
-
-4. 🔧 GESTIÓN OPERATIVA
-   - Creación de incidentes
-   - Monitoreo de servicios
-   - Análisis de calidad
-
-FORMATO DE RESPUESTA:
-- Directo y profesional
-- Datos específicos cuando estén disponibles
-- Sugerencias proactivas
-- Acciones recomendadas claras
-
-COMANDOS CLAVE:
-- "Cliente: [datos]" → Alta de cliente
-- "Prospecto: [datos]" → Alta de prospecto  
-- "Incidente: [descripción]" → Crear incidente
-- "Estadísticas" → Reporte completo
-- "Información [nombre]" → Datos del cliente
-
-Responde siempre con información útil y accionable."""
-
+        return (
+            "Eres CARLOS, administrador de backend de Red Soluciones ISP para Omar y Eduardo.\n"
+            "\nROL: Administrador operativo del sistema backend\n"
+            "PERSONALIDAD: Directo, eficiente, sin charla innecesaria\n"
+            "RESPUESTAS: Solo lo que se pide, máximo 2-3 líneas\n"
+            "\nFUNCIONES PRINCIPALES:\n"
+            "- Alta/consulta clientes y prospectos\n"
+            "- Estadísticas del negocio\n"
+            "- Crear incidentes técnicos\n"
+            "- Análisis operativos\n"
+            "\nFORMATO:\n"
+            "✅ Cliente María López registrada. Zona Norte.\n"
+            "❌ Error: Cliente no encontrado.\n"
+            "📊 534 clientes activos, $158K ingresos mensuales.\n"
+            "\nNO digas: 'puedo ayudarte', 'estoy aquí para', explicaciones largas.\n"
+            "SÍ responde: Datos directos, resultados claros, estado de operaciones.\n"
+            "\nOmar y Eduardo necesitan eficiencia operativa, no conversación.\n"
+            "- Acciones recomendadas claras\n"
+            "\nCOMANDOS CLAVE:\n"
+            "- 'Cliente: [datos]' → Alta de cliente\n"
+            "- 'Prospecto: [datos]' → Alta de prospecto\n"
+            "- 'Incidente: [descripción]' → Crear incidente\n"
+            "- 'Estadísticas' → Reporte completo\n"
+            "- 'Información [nombre]' → Datos del cliente\n"
+            "\nResponde siempre con información útil y accionable."
+        )
     def _setup_patterns(self):
-        """Configurar patrones de reconocimiento de intenciones"""
         self.intent_patterns = {
-            # === GESTIÓN DE CLIENTES ===
             'cliente_alta': {
                 'patterns': [
-                    r'cliente:\s*(.+)',
-                    r'alta\s+cliente\s+(.+)',
-                    r'registrar\s+cliente\s+(.+)',
-                    r'nuevo\s+cliente\s+(.+)'
+                    r'cliente[:\s]*(.*)',
+                    r'alta\s+cliente\s*(.*)',
+                    r'registrar\s+cliente\s*(.*)',
+                    r'nuevo\s+cliente\s*(.*)',
+                    r'(?:agregar|añadir)\s+cliente\s*(.*)'
                 ],
                 'action': ActionType.CLIENTE_ALTA,
-                'extractor': self._extract_cliente_data
+                'extractor': self._extract_cliente_data_flexible
             },
-            
             'cliente_info': {
                 'patterns': [
                     r'información\s+(?:del\s+)?cliente\s+(.+)',
@@ -255,31 +206,315 @@ Responde siempre con información útil y accionable."""
                 'action': ActionType.CLIENTE_INFO,
                 'extractor': self._extract_search_term
             },
-            
+            'prospecto_alta': {
+                'patterns': [
+                    r'prospecto[:\s]*(.*)',
+                    r'alta\s+prospecto\s*(.*)',
+                    r'nuevo\s+prospecto\s*(.*)',
+                    r'lead[:\s]*(.*)'
+                ],
+                'action': ActionType.PROSPECTO_ALTA,
+                'extractor': self._extract_prospecto_data_flexible
+            },
+            'incidente_crear': {
+                'patterns': [
+                    r'incidente[:\s]*(.*)',
+                    r'crear\s+incidente\s*(.*)',
+                    r'nuevo\s+incidente\s*(.*)',
+                    r'problema[:\s]*(.*)'
+                ],
+                'action': ActionType.INCIDENTE_CREAR,
+                'extractor': self._extract_incidente_data_flexible
+            },
+            'estadisticas': {
+                'patterns': [
+                    r'estadísticas?',
+                    r'reporte',
+                    r'números',
+                    r'métricas',
+                    r'dashboard',
+                    r'resumen'
+                ],
+                'action': ActionType.ESTADISTICAS,
+                'extractor': lambda x: {}
+            },
+            'analisis': {
+                'patterns': [
+                    r'análisis\s+(.+)',
+                    r'analizar\s+(.+)',
+                    r'revisar\s+(.+)',
+                    r'evaluar\s+(.+)'
+                ],
+                'action': ActionType.ANALISIS,
+                'extractor': self._extract_analysis_target
+            }
+        }
+        self.data_patterns = {
+            'cliente': r'([^,]+),\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*(\d+)',
+            'prospecto': r'([^,]+),\s*([^,]+),\s*([^,]+)',
+            'email': r'[\w\.-]+@[\w\.-]+\.\w+',
+            'telefono': r'\b\d{3}[-.\s]?\d{3,4}[-.\s]?\d{4}\b',
+            'zona': r'\b(?:norte|sur|este|oeste|centro|zona\s+\d+)\b',
+            'pago': r'\b\d{2,6}\b'
+        }
+    def _extract_cliente_data_flexible(self, data_string: str) -> 'ClienteData':
+        campos = [x.strip() for x in re.split(r',|;', data_string) if x.strip()]
+        nombre = email = zona = telefono = pago = None
+        for campo in campos:
+            if re.match(self.data_patterns['email'], campo):
+                email = campo
+            elif re.match(self.data_patterns['telefono'], campo):
+                telefono = campo
+            elif re.match(self.data_patterns['zona'], campo, re.IGNORECASE):
+                zona = campo
+            elif re.match(self.data_patterns['pago'], campo):
+                pago = float(campo)
+            elif not nombre:
+                nombre = campo
+        missing = []
+        if not nombre: missing.append('nombre')
+        if not email: missing.append('email')
+        if not zona: missing.append('zona')
+        if not telefono: missing.append('teléfono')
+        if not pago: missing.append('pago')
+        if missing:
+            raise ValueError(f"Faltan datos: {', '.join(missing)}. Ejemplo: Cliente: Nombre, email, zona, teléfono, pago")
+        return ClienteData(nombre=nombre, email=email, zona=zona, telefono=telefono, pago=pago)
+    def _extract_prospecto_data_flexible(self, data_string: str) -> 'ProspectoData':
+        campos = [x.strip() for x in re.split(r',|;', data_string) if x.strip()]
+        nombre = telefono = zona = None
+        for campo in campos:
+            if re.match(self.data_patterns['telefono'], campo):
+                telefono = campo
+            elif re.match(self.data_patterns['zona'], campo, re.IGNORECASE):
+                zona = campo
+            elif not nombre:
+                nombre = campo
+        missing = []
+        if not nombre: missing.append('nombre')
+        if not telefono: missing.append('teléfono')
+        if not zona: missing.append('zona')
+        if missing:
+            raise ValueError(f"Faltan datos: {', '.join(missing)}. Ejemplo: Prospecto: Nombre, teléfono, zona")
+        return ProspectoData(nombre=nombre, telefono=telefono, zona=zona)
+    def _extract_incidente_data_flexible(self, data_string: str) -> dict:
+        descripcion = data_string.strip()
+        if not descripcion:
+            raise ValueError("Falta la descripción del incidente. Ejemplo: Incidente: descripción del problema")
+        return {"descripcion": descripcion}
+    async def _process_intent(self, intent: Dict, query: str, user_context: Optional[Dict[str, Any]] = None) -> AgentResponse:
+        # ...existing code...
+    async def _process_with_ai(self, query: str, user_context: Optional[Dict[str, Any]] = None) -> AgentResponse:
+        # ...existing code...
+    def _fallback_response(self, query: str) -> AgentResponse:
+        # ...existing code...
+    def _extract_cliente_data(self, data_string: str) -> ClienteData:
+        # ...existing code...
+    def _extract_prospecto_data(self, data_string: str) -> ProspectoData:
+        # ...existing code...
+    def _extract_search_term(self, data_string: str) -> Dict[str, str]:
+        # ...existing code...
+    def _extract_incidente_data(self, data_string: str) -> Dict[str, str]:
+        # ...existing code...
+    def _extract_analysis_target(self, data_string: str) -> Dict[str, str]:
+        # ...existing code...
+    async def _handle_cliente_alta(self, cliente_data: ClienteData) -> AgentResponse:
+        # ...existing code...
+    async def _handle_cliente_info(self, search_data: Dict[str, str]) -> AgentResponse:
+        # ...existing code...
+    async def _handle_prospecto_alta(self, prospecto_data: ProspectoData) -> AgentResponse:
+        # ...existing code...
+    async def _handle_incidente_crear(self, incidente_data: Dict[str, str]) -> AgentResponse:
+        # ...existing code...
+    async def _handle_estadisticas(self) -> AgentResponse:
+        # ...existing code...
+    async def _handle_analisis(self, analysis_data: Dict[str, str]) -> AgentResponse:
+        # ...existing code...
+    def _analyze_revenue(self, data: List[Dict]) -> List[str]:
+        # ...existing code...
+    def _analyze_zones(self, data: List[Dict]) -> List[str]:
+        # ...existing code...
+    def _analyze_clients(self, data: List[Dict]) -> List[str]:
+        # ...existing code...
+    def _general_analysis(self, data: List[Dict]) -> List[str]:
+        # ...existing code...
+    async def _get_business_context(self) -> Dict[str, Any]:
+        # ...existing code...
+    def _generate_suggestions(self, query: str) -> List[str]:
+        # ...existing code...
+    def _generate_quick_actions(self, query: str) -> List[Dict[str, str]]:
+        # ...existing code...
+    async def chat(self, message: str, user_context: Optional[Dict[str, Any]] = None) -> str:
+        # ...existing code...
+    def process_message(self, message: str) -> str:
+        # ...existing code...
+        self.sheets_service = sheets_service
+        self.context_engine = context_engine
+        self.logger = logging.getLogger(__name__)
+        
+        # === CONFIGURACIÓN EMPRESARIAL ===
+        self.company = "Red Soluciones ISP"
+        self.version = "4.0 Consolidado"
+        self.role = "SUPER_ADMINISTRADOR_CONSOLIDADO"
+        # === CONFIGURACIÓN IA ===
+        self.ai_model = None
+        if GEMINI_AVAILABLE and genai is not None:
+            try:
+                self.ai_model = genai.GenerativeModel(
+                    'gemini-2.5-pro',
+                    system_instruction=self._get_consolidated_prompt()
+                )
+                self.logger.info("🧠 IA Consolidada configurada exitosamente")
+            except Exception as e:
+                self.logger.error(f"❌ Error configurando IA: {e}")
+        # === CONFIGURACIÓN DE PATRONES ===
+        self._setup_patterns()
+        # === MÉTRICAS EMPRESARIALES ===
+        self.business_metrics = {
+            "target_monthly_revenue": 150000,
+            "standard_plan": 350,
+            "premium_plan": 500,
+            "enterprise_plan": 750,
+            "churn_threshold": 5
+        }
+        # === MEMORIA DE CONVERSACIÓN ===
+        self.conversation_memory = {}
+        # === RESPUESTAS ESTRUCTURADAS ===
+        self.fallback_responses = {
+            "greeting": "Listo. ¿Qué necesitas?",
+            "help": "Comandos: estadísticas | buscar [nombre] | Cliente: nombre,email,zona,teléfono,pago",
+            "error": "Error. Revisa formato."
+        }
+        self.logger.info(f"🧠 Agente Consolidado v{self.version} inicializado exitosamente")
+
+    def _get_consolidated_prompt(self) -> str:
+        return (
+            "Eres CARLOS, administrador de backend de Red Soluciones ISP para Omar y Eduardo.\n"
+            "\nROL: Administrador operativo del sistema backend\n"
+            "PERSONALIDAD: Directo, eficiente, sin charla innecesaria\n"
+            "RESPUESTAS: Solo lo que se pide, máximo 2-3 líneas\n"
+            "\nFUNCIONES PRINCIPALES:\n"
+            "- Alta/consulta clientes y prospectos\n"
+            "- Estadísticas del negocio\n"
+            "- Crear incidentes técnicos\n"
+            "- Análisis operativos\n"
+            "\nFORMATO:\n"
+            "✅ Cliente María López registrada. Zona Norte.\n"
+            "❌ Error: Cliente no encontrado.\n"
+            "📊 534 clientes activos, $158K ingresos mensuales.\n"
+            "\nNO digas: 'puedo ayudarte', 'estoy aquí para', explicaciones largas.\n"
+            "SÍ responde: Datos directos, resultados claros, estado de operaciones.\n"
+            "\nOmar y Eduardo necesitan eficiencia operativa, no conversación.\n"
+            "- Acciones recomendadas claras\n"
+            "\nCOMANDOS CLAVE:\n"
+            "- 'Cliente: [datos]' → Alta de cliente\n"
+            "- 'Prospecto: [datos]' → Alta de prospecto\n"
+            "- 'Incidente: [descripción]' → Crear incidente\n"
+            "- 'Estadísticas' → Reporte completo\n"
+            "- 'Información [nombre]' → Datos del cliente\n"
+            "\nResponde siempre con información útil y accionable."
+        )
+
+    def _extract_cliente_data_flexible(self, data_string: str) -> 'ClienteData':
+        campos = [x.strip() for x in re.split(r',|;', data_string) if x.strip()]
+        nombre = email = zona = telefono = pago = None
+        for campo in campos:
+            if re.match(self.data_patterns['email'], campo):
+                email = campo
+            elif re.match(self.data_patterns['telefono'], campo):
+                telefono = campo
+            elif re.match(self.data_patterns['zona'], campo, re.IGNORECASE):
+                zona = campo
+            elif re.match(self.data_patterns['pago'], campo):
+                pago = float(campo)
+            elif not nombre:
+                nombre = campo
+        missing = []
+        if not nombre: missing.append('nombre')
+        if not email: missing.append('email')
+        if not zona: missing.append('zona')
+        if not telefono: missing.append('teléfono')
+        if not pago: missing.append('pago')
+        if missing:
+            raise ValueError(f"Faltan datos: {', '.join(missing)}. Ejemplo: Cliente: Nombre, email, zona, teléfono, pago")
+        return ClienteData(nombre=nombre, email=email, zona=zona, telefono=telefono, pago=pago)
+
+    def _extract_prospecto_data_flexible(self, data_string: str) -> 'ProspectoData':
+        campos = [x.strip() for x in re.split(r',|;', data_string) if x.strip()]
+        nombre = telefono = zona = None
+        for campo in campos:
+            if re.match(self.data_patterns['telefono'], campo):
+                telefono = campo
+            elif re.match(self.data_patterns['zona'], campo, re.IGNORECASE):
+                zona = campo
+            elif not nombre:
+                nombre = campo
+        missing = []
+        if not nombre: missing.append('nombre')
+        if not telefono: missing.append('teléfono')
+        if not zona: missing.append('zona')
+        if missing:
+            raise ValueError(f"Faltan datos: {', '.join(missing)}. Ejemplo: Prospecto: Nombre, teléfono, zona")
+        return ProspectoData(nombre=nombre, telefono=telefono, zona=zona)
+
+    def _extract_incidente_data_flexible(self, data_string: str) -> dict:
+        descripcion = data_string.strip()
+        if not descripcion:
+            raise ValueError("Falta la descripción del incidente. Ejemplo: Incidente: descripción del problema")
+        return {"descripcion": descripcion}
+- "Estadísticas" → Reporte completo
+- "Información [nombre]" → Datos del cliente
+
+Responde siempre con información útil y accionable."""
+
+    def _setup_patterns(self):
+        """Configurar patrones de reconocimiento de intenciones"""
+        self.intent_patterns = {
+            # === GESTIÓN DE CLIENTES ===
+            'cliente_alta': {
+                'patterns': [
+                    r'cliente[:\s]*(.*)',
+                    r'alta\s+cliente\s*(.*)',
+                    r'registrar\s+cliente\s*(.*)',
+                    r'nuevo\s+cliente\s*(.*)',
+                    r'(?:agregar|añadir)\s+cliente\s*(.*)'
+                ],
+                'action': ActionType.CLIENTE_ALTA,
+                'extractor': self._extract_cliente_data_flexible
+            },
+            'cliente_info': {
+                'patterns': [
+                    r'información\s+(?:del\s+)?cliente\s+(.+)',
+                    r'datos\s+(?:del\s+)?cliente\s+(.+)',
+                    r'buscar\s+cliente\s+(.+)',
+                    r'ver\s+cliente\s+(.+)',
+                    r'cliente\s+(.+)(?:\s+información|\s+datos|$)'
+                ],
+                'action': ActionType.CLIENTE_INFO,
+                'extractor': self._extract_search_term
+            },
             # === GESTIÓN DE PROSPECTOS ===
             'prospecto_alta': {
                 'patterns': [
-                    r'prospecto:\s*(.+)',
-                    r'alta\s+prospecto\s+(.+)',
-                    r'nuevo\s+prospecto\s+(.+)',
-                    r'lead:\s*(.+)'
+                    r'prospecto[:\s]*(.*)',
+                    r'alta\s+prospecto\s*(.*)',
+                    r'nuevo\s+prospecto\s*(.*)',
+                    r'lead[:\s]*(.*)'
                 ],
                 'action': ActionType.PROSPECTO_ALTA,
-                'extractor': self._extract_prospecto_data
+                'extractor': self._extract_prospecto_data_flexible
             },
-            
             # === GESTIÓN DE INCIDENTES ===
             'incidente_crear': {
                 'patterns': [
-                    r'incidente:\s*(.+)',
-                    r'crear\s+incidente\s+(.+)',
-                    r'nuevo\s+incidente\s+(.+)',
-                    r'problema:\s*(.+)'
+                    r'incidente[:\s]*(.*)',
+                    r'crear\s+incidente\s*(.*)',
+                    r'nuevo\s+incidente\s*(.*)',
+                    r'problema[:\s]*(.*)'
                 ],
                 'action': ActionType.INCIDENTE_CREAR,
-                'extractor': self._extract_incidente_data
+                'extractor': self._extract_incidente_data_flexible
             },
-            
             # === ANÁLISIS Y ESTADÍSTICAS ===
             'estadisticas': {
                 'patterns': [
@@ -293,7 +528,6 @@ Responde siempre con información útil y accionable."""
                 'action': ActionType.ESTADISTICAS,
                 'extractor': lambda x: {}
             },
-            
             'analisis': {
                 'patterns': [
                     r'análisis\s+(.+)',
@@ -305,7 +539,6 @@ Responde siempre con información útil y accionable."""
                 'extractor': self._extract_analysis_target
             }
         }
-        
         # === PATRONES DE EXTRACCIÓN DE DATOS ===
         self.data_patterns = {
             'cliente': r'([^,]+),\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*(\d+)',
@@ -316,86 +549,6 @@ Responde siempre con información útil y accionable."""
             'pago': r'\b\d{2,6}\b'
         }
 
-    async def process_query(self, query: str, user_context: Optional[Dict[str, Any]] = None) -> AgentResponse:
-        """
-        Procesar consulta con el agente consolidado
-        
-        Args:
-            query: Consulta del usuario
-            user_context: Contexto adicional del usuario
-            
-        Returns:
-            AgentResponse: Respuesta estructurada del agente
-        """
-        start_time = datetime.now()
-        
-        try:
-            # Limpiar y normalizar query
-            normalized_query = self._normalize_query(query)
-            
-            # Detectar intención
-            intent, confidence = self._detect_intent(normalized_query)
-            
-            # Procesar según intención
-            if intent:
-                response = await self._process_intent(intent, normalized_query, user_context)
-            else:
-                response = await self._process_with_ai(normalized_query, user_context)
-            
-            # Calcular tiempo de ejecución
-            execution_time = (datetime.now() - start_time).total_seconds()
-            response.execution_time = execution_time
-            
-            return response
-            
-        except Exception as e:
-            self.logger.error(f"Error procesando consulta: {e}")
-            return AgentResponse(
-                message=f"Error procesando la consulta: {str(e)}",
-                action_type=ActionType.CONSULTA_GENERAL,
-                response_type=ResponseType.ERROR,
-                confidence=0.0,
-                data={"error": str(e)},
-                suggestions=["Intente reformular la consulta", "Verifique la sintaxis"],
-                quick_actions=[],
-                context_used={},
-                execution_time=(datetime.now() - start_time).total_seconds()
-            )
-
-    def _normalize_query(self, query: str) -> str:
-        """Normalizar consulta para procesamiento"""
-        # Convertir a minúsculas
-        normalized = query.lower().strip()
-        
-        # Eliminar caracteres especiales innecesarios
-        normalized = re.sub(r'[^\w\s,:.@-]', '', normalized)
-        
-        # Normalizar espacios
-        normalized = re.sub(r'\s+', ' ', normalized)
-        
-        return normalized
-
-    def _detect_intent(self, query: str) -> Tuple[Optional[Dict], float]:
-        """Detectar intención de la consulta"""
-        best_match = None
-        best_confidence = 0.0
-        
-        for intent_name, intent_config in self.intent_patterns.items():
-            for pattern in intent_config['patterns']:
-                match = re.search(pattern, query, re.IGNORECASE)
-                if match:
-                    confidence = len(match.group(0)) / len(query)
-                    if confidence > best_confidence:
-                        best_confidence = confidence
-                        best_match = {
-                            'name': intent_name,
-                            'match': match,
-                            'action': intent_config['action'],
-                            'extractor': intent_config['extractor']
-                        }
-        
-        return best_match, best_confidence
-
     async def _process_intent(self, intent: Dict, query: str, user_context: Optional[Dict[str, Any]] = None) -> AgentResponse:
         """Procesar intención detectada"""
         action_type = intent['action']
@@ -403,7 +556,20 @@ Responde siempre con información útil y accionable."""
         match = intent['match']
         
         # Extraer datos según el tipo de intención
-        extracted_data = extractor(match.group(1) if match.groups() else query)
+        try:
+            extracted_data = extractor(match.group(1) if match.groups() else query)
+        except Exception as e:
+            return AgentResponse(
+                message=f"No se pudo procesar la información: {str(e)}",
+                action_type=action_type,
+                response_type=ResponseType.ERROR,
+                confidence=0.0,
+                data={"error": str(e)},
+                suggestions=["Verifique los datos ingresados", "Intente nuevamente", "Consulte ayuda para el formato correcto"],
+                quick_actions=[{"text": "Ayuda", "action": "ayuda"}],
+                context_used={},
+                execution_time=0.0
+            )
         
         try:
             if action_type == ActionType.CLIENTE_ALTA:
@@ -550,35 +716,32 @@ Proporciona una respuesta profesional y accionable basada en el contexto empresa
             if not self.sheets_service:
                 raise Exception("Servicio de Google Sheets no disponible")
             
-            # Preparar datos para Sheets
-            row_data = {
+            # Preparar datos para Sheets usando el formato correcto
+            client_data = {
                 'Nombre': cliente_data.nombre,
                 'Email': cliente_data.email,
                 'Zona': cliente_data.zona,
                 'Teléfono': cliente_data.telefono,
-                'Pago Mensual': cliente_data.pago,
-                'Estado': cliente_data.estado,
-                'Fecha Registro': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                'Pago': cliente_data.pago,
+                'Notas': f'Cliente agregado via agente el {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
             }
             
-            # Agregar a Google Sheets
-            result = self.sheets_service.add_row(row_data)
+            # Agregar usando el método correcto
+            result = self.sheets_service.add_client(client_data)
             
-            message = f"✅ Cliente {cliente_data.nombre} registrado exitosamente."
-            if 'ID' in result:
-                message += f" ID: {result['ID']}"
+            if result:
+                message = f"✅ Cliente {cliente_data.nombre} registrado."
+            else:
+                message = f"❌ Error registrando cliente {cliente_data.nombre}."
             
             return AgentResponse(
                 message=message,
                 action_type=ActionType.CLIENTE_ALTA,
-                response_type=ResponseType.SUCCESS,
-                confidence=1.0,
-                data={"cliente": cliente_data.__dict__, "result": result},
-                suggestions=["Configurar servicios del cliente", "Programar instalación"],
-                quick_actions=[
-                    {"text": "Ver estadísticas", "action": "estadísticas"},
-                    {"text": "Agregar otro cliente", "action": "cliente_alta"}
-                ],
+                response_type=ResponseType.SUCCESS if result else ResponseType.ERROR,
+                confidence=1.0 if result else 0.0,
+                data={"cliente": cliente_data.__dict__, "success": result},
+                suggestions=[] if result else ["Verificar conexión", "Revisar datos"],
+                quick_actions=[],
                 context_used={"sheets_available": True},
                 execution_time=0.0
             )
@@ -638,7 +801,8 @@ Proporciona una respuesta profesional y accionable basada en el contexto empresa
             message += f"📱 Teléfono: {client.get('Teléfono', 'N/A')}\n"
             message += f"📍 Zona: {client.get('Zona', 'N/A')}\n"
             message += f"💰 Pago: ${client.get('Pago Mensual', 'N/A')}\n"
-            message += f"📊 Estado: {client.get('Estado', 'N/A')}"
+            message += f"📊 Estado: {client.get('Estado', 'N/A')}\n"
+            message += f"📝 Notas: {client.get('Notas', 'N/A')}"
             
             if len(matches) > 1:
                 message += f"\n\n⚠️ Se encontraron {len(matches)} coincidencias. Mostrando la primera."
@@ -771,18 +935,27 @@ Proporciona una respuesta profesional y accionable basada en el contexto empresa
             if not self.sheets_service:
                 raise Exception("Servicio de Google Sheets no disponible")
             
-            # Obtener datos de Sheets
-            all_rows = self.sheets_service.get_all_rows()
+            # Obtener datos enriquecidos de Sheets
+            if hasattr(self.sheets_service, 'get_enriched_clients'):
+                all_rows = self.sheets_service.get_enriched_clients()
+            else:
+                all_rows = self.sheets_service.get_all_rows()
             
             # Calcular estadísticas
             total_clients = len(all_rows)
-            active_clients = len([r for r in all_rows if r.get('Estado', '').lower() == 'activo'])
+            active_clients = len([r for r in all_rows if str(r.get('Activo (SI/NO)', '')).lower() in ['si', 'sí', 'yes', '1', 'true']])
             
             # Calcular ingresos
             total_revenue = 0
             for row in all_rows:
                 try:
-                    pago = float(row.get('Pago Mensual', 0))
+                    # Intentar varios nombres de campo para el pago
+                    pago = row.get('Pago Mensual', 0) or row.get('Pago', 0)
+                    if isinstance(pago, str):
+                        # Remover comas y convertir a float
+                        pago = float(pago.replace(',', '').replace('$', ''))
+                    else:
+                        pago = float(pago)
                     total_revenue += pago
                 except (ValueError, TypeError):
                     pass
@@ -793,23 +966,15 @@ Proporciona una respuesta profesional y accionable basada en el contexto empresa
                 zona = row.get('Zona', 'Sin Zona')
                 zonas[zona] = zonas.get(zona, 0) + 1
             
-            # Formatear mensaje
-            message = f"📊 **ESTADÍSTICAS RED SOLUCIONES ISP**\n\n"
-            message += f"👥 **Clientes:**\n"
-            message += f"  • Total: {total_clients}\n"
-            message += f"  • Activos: {active_clients}\n\n"
-            message += f"💰 **Ingresos Mensuales:** ${total_revenue:,.2f}\n\n"
-            message += f"📍 **Distribución por Zonas:**\n"
-            for zona, count in sorted(zonas.items()):
-                message += f"  • {zona}: {count} clientes\n"
+            # Formatear mensaje directo
+            message = f"📊 {total_clients} clientes activos, ${total_revenue:,.0f}/mes"
             
-            # Calcular KPIs
-            avg_payment = total_revenue / max(active_clients, 1)
-            target_achievement = (total_revenue / self.business_metrics["target_monthly_revenue"]) * 100
-            
-            message += f"\n📈 **KPIs:**\n"
-            message += f"  • Pago promedio: ${avg_payment:.2f}\n"
-            message += f"  • Cumplimiento objetivo: {target_achievement:.1f}%"
+            # Solo agregar zonas si son menos de 6 para mantenerlo breve
+            if len(zonas) <= 6:
+                message += f"\n📍 {', '.join([f'{z}: {c}' for z, c in sorted(zonas.items())[:5]])}"
+            else:
+                top_zones = sorted(zonas.items(), key=lambda x: x[1], reverse=True)[:3]
+                message += f"\n� Top zonas: {', '.join([f'{z}: {c}' for z, c in top_zones])}"
             
             return AgentResponse(
                 message=message,
@@ -821,15 +986,12 @@ Proporciona una respuesta profesional y accionable basada en el contexto empresa
                     "active_clients": active_clients,
                     "total_revenue": total_revenue,
                     "zones": zonas,
-                    "avg_payment": avg_payment,
-                    "target_achievement": target_achievement
+                    "avg_payment": total_revenue / max(active_clients, 1),
+                    "target_achievement": (total_revenue / self.business_metrics["target_monthly_revenue"]) * 100
                 },
-                suggestions=["Revisar clientes inactivos", "Analizar oportunidades de crecimiento"],
-                quick_actions=[
-                    {"text": "Agregar cliente", "action": "cliente_alta"},
-                    {"text": "Ver cliente específico", "action": "cliente_info"}
-                ],
-                context_used={"sheets_available": True, "data_date": datetime.now().isoformat()},
+                suggestions=[],
+                quick_actions=[],
+                context_used={},
                 execution_time=0.0
             )
             

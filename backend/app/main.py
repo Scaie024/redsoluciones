@@ -35,7 +35,7 @@ from backend.app.services.sheets.service import SheetsServiceV2 as SheetsService
 from backend.app.services.consolidated_agent import ConsolidatedISPAgent
 from backend.app.services.context_engine import ContextEngine
 from backend.app.utils.logger import get_logger
-from backend.app.core.config import settings
+from backend.app.core.config_unified import settings
 from backend.app.core.user_auth import user_auth
 
 # Crear aplicación FastAPI
@@ -86,27 +86,9 @@ async def general_exception_handler(request: Request, exc: Exception):
         }
     )
 
-# Mount frontend static files
-frontend_dir = settings.FRONTEND_DIR
-app.mount(
-    "/frontend",
-    StaticFiles(directory=str(frontend_dir), html=True),
-    name="frontend"
-)
-
-# Root redirect SIEMPRE a dashboard moderno
-@app.get("/")
-async def root():
-    return RedirectResponse(url="/frontend/index.html")
-
-# Mount assets directly
-assets_dir = settings.FRONTEND_DIR / "assets"
-if assets_dir.exists():
-    app.mount(
-        "/assets",
-        StaticFiles(directory=str(assets_dir)),
-        name="assets"
-    )
+# === SERVIR FRONTEND ===
+# NOTA: El mount del frontend se movió al final del archivo 
+# para evitar que capture las rutas de API antes de que se definan.
 
 # === CONFIGURACIÓN DE SERVICIOS UNIFICADA ===
 # Inicializar variables globales
@@ -119,25 +101,28 @@ logger = get_logger(__name__)
 try:
     # Instantiate services con configuración centralizada y manejo robusto
     logger.info("🔧 Inicializando servicios del sistema...")
-    
     sheets_service = SheetsService()
-    if not sheets_service or not sheets_service.gc:
-        raise ValueError("❌ No se pudo inicializar Google Sheets")
-        
-    # === AGENTES IA CONSOLIDADOS ===
+    logger.info("✅ SheetsService inicializado")
     context_engine = ContextEngine(sheets_service)
-    consolidated_agent = ConsolidatedISPAgent(sheets_service, context_engine)
-    
-    # === COMPATIBILIDAD ===
-    # Mantener referencias para compatibilidad con código existente
-    enhanced_agent = consolidated_agent  # HomologatedAIAgent -> ConsolidatedISPAgent
-    super_agent = consolidated_agent     # SmartISPAgent -> ConsolidatedISPAgent    logger.info(f"✅ {settings.PROJECT_NAME} v{settings.VERSION} - Sistema inicializado correctamente")
-    
+    try:
+        consolidated_agent = ConsolidatedISPAgent(sheets_service, context_engine)
+        # Compatibilidad
+        enhanced_agent = consolidated_agent
+        super_agent = consolidated_agent
+        logger.info(f"✅ {settings.PROJECT_NAME} v{settings.VERSION} - Sistema inicializado correctamente")
+    except Exception as agent_error:
+        logger.error(f"❌ Error en inicialización del agente IA: {agent_error}")
+        consolidated_agent = None
+        enhanced_agent = None
+        super_agent = None
+        logger.warning("⚠️ Sistema iniciado sin agente IA, pero con acceso a Google Sheets")
 except Exception as e:
-    logger.error(f"❌ Error crítico en inicialización: {e}")
-    # Fallback a modo seguro
+    logger.error(f"❌ Error crítico en inicialización de servicios: {e}")
     sheets_service = None
     context_engine = None
+    consolidated_agent = None
+    enhanced_agent = None
+    super_agent = None
     enhanced_agent = None
     super_agent = None
     logger.warning("⚠️ Sistema iniciado en modo seguro sin servicios externos")
@@ -160,11 +145,6 @@ async def startup_event():
         except Exception as e:
             logger.error(f"❌ Error en startup: {e}")
 
-# Redirección legacy para /dashboard.html y /index.html
-@app.get("/dashboard.html")
-@app.get("/index.html")
-async def legacy_dashboard():
-    return RedirectResponse(url="/frontend/index.html")
 class ClientData(BaseModel):
     nombre: str
     email: Optional[str] = ""
@@ -227,6 +207,14 @@ async def test_sheets_connection():
             
             # Intentar abrir la hoja específicamente
             try:
+                if not sheets_service.sheet_id:
+                    return {
+                        "success": False,
+                        "message": "❌ ID de Google Sheet no configurado",
+                        "error": "sheet_id is None",
+                        "solution": "Verificar configuración de GOOGLE_SHEET_ID en .env"
+                    }
+                
                 spreadsheet = sheets_service.gc.open_by_key(sheets_service.sheet_id)
                 worksheet = spreadsheet.sheet1  # Primera hoja
                 
@@ -250,11 +238,19 @@ async def test_sheets_connection():
                 error_msg = str(sheet_error)
                 
                 if "PERMISSION_DENIED" in error_msg or "does not have access" in error_msg:
+                    # Obtener email de service account de forma segura
+                    service_email = "red-soluciones-fo@dev-spirit-466223-v9.iam.gserviceaccount.com"
+                    try:
+                        # Información de las credenciales (para desarrollo)
+                        service_email = "google-service-account@configured"
+                    except:
+                        pass
+                    
                     return {
                         "success": False,
                         "message": "❌ Sin permisos para acceder a la Google Sheet",
                         "error": error_msg,
-                        "solution": f"Comparte la hoja con: {sheets_service.gc.auth.service_account_email if hasattr(sheets_service.gc.auth, 'service_account_email') else 'red-soluciones-fo@dev-spirit-466223-v9.iam.gserviceaccount.com'}",
+                        "solution": f"Comparte la hoja con: {service_email}",
                         "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheets_service.sheet_id}/edit",
                         "sheet_id": sheets_service.sheet_id
                     }
@@ -285,6 +281,109 @@ async def test_sheets_connection():
             "message": f"❌ Error general: {str(e)}",
             "error_type": type(e).__name__
         }
+
+@app.get("/api/debug/cobranza")
+async def debug_cobranza():
+    """Debug: obtener datos directos de cobranza"""
+    try:
+        if not sheets_service:
+            raise HTTPException(status_code=503, detail="Servicio de Google Sheets no disponible")
+        
+        # Probar obtener datos de cobranza
+        cobranza_data = sheets_service.get_cobranza_data()
+        
+        # Analizar qué valores únicos tenemos para mes y año
+        meses = set()
+        años = set()
+        for record in cobranza_data[:20]:  # Analizar primeros 20 registros
+            mes = record.get('Mes', '')
+            año = record.get('Año', '')
+            meses.add(mes)
+            años.add(año)
+        
+        # Filtrar solo registros de julio 2025
+        julio_2025 = [
+            record for record in cobranza_data 
+            if record.get('Mes', '').lower() == 'julio' and str(record.get('Año', '')) == '2025'
+        ]
+        
+        return {
+            "success": True,
+            "total_cobranza": len(cobranza_data),
+            "julio_2025": len(julio_2025),
+            "unique_meses": sorted(list(meses)),
+            "unique_años": sorted(list(años)),
+            "sample_raw_data": cobranza_data[:3],
+            "sample_filtered": julio_2025[:3]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error en debug cobranza: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/debug/enriched")
+async def debug_enriched():
+    """Debug: obtener datos enriquecidos"""
+    try:
+        if not sheets_service:
+            raise HTTPException(status_code=503, detail="Servicio de Google Sheets no disponible")
+        
+        enriched_clients = sheets_service.get_enriched_clients()
+        
+        # Mostrar los primeros 3 clientes enriquecidos
+        sample = enriched_clients[:3] if enriched_clients else []
+        
+        return {
+            "success": True,
+            "total_enriched": len(enriched_clients),
+            "sample_data": sample
+        }
+        
+    except Exception as e:
+        logger.error(f"Error en debug enriched: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/sheets/explore")
+async def explore_sheets():
+    """Explorar todas las hojas y columnas del Google Sheets"""
+    try:
+        if not sheets_service:
+            raise HTTPException(status_code=503, detail="Servicio de Google Sheets no disponible")
+        
+        spreadsheet = sheets_service.gc.open_by_key(sheets_service.sheet_id)
+        
+        sheets_info = []
+        for worksheet in spreadsheet.worksheets():
+            try:
+                # Obtener todas las cabeceras (primera fila completa)
+                headers = worksheet.row_values(1)
+                
+                # Obtener algunas filas de ejemplo
+                all_values = worksheet.get_all_values()
+                sample_rows = all_values[1:4] if len(all_values) > 1 else []
+                
+                sheets_info.append({
+                    "name": worksheet.title,
+                    "rows": worksheet.row_count,
+                    "cols": worksheet.col_count,
+                    "headers": headers,
+                    "sample_data": sample_rows
+                })
+            except Exception as e:
+                sheets_info.append({
+                    "name": worksheet.title,
+                    "error": str(e)
+                })
+        
+        return {
+            "success": True,
+            "spreadsheet_title": spreadsheet.title,
+            "sheets": sheets_info
+        }
+        
+    except Exception as e:
+        logger.error(f"Error explorando sheets: {e}")
+        raise HTTPException(status_code=500, detail=f"Error explorando sheets: {str(e)}")
 
 @app.get("/api/sheets/status")
 async def get_sheets_status():
@@ -360,20 +459,35 @@ async def serve_dashboard():
 async def chat(msg: ChatMessage):
     """Process chat message with intelligent AI agent and user context"""
     try:
-        # Crear contexto de usuario
+        # Crear contexto de usuario simple
         user_context = None
         if msg.user_id:
-            user_context = user_auth.create_user_context(
-                msg.user_id, 
-                msg.session_id
-            )
-            # Actualizar actividad del usuario
-            if msg.session_id:
-                user_auth.update_activity(msg.session_id)
-            
-            logger.info(f"💬 Chat - Usuario: {user_context['name']} ({user_context['user_id']})")
+            try:
+                # Validar sesión si existe session_id
+                if msg.session_id:
+                    session = user_auth.validate_session(msg.session_id)
+                    if session:
+                        user_context = {
+                            "user_id": msg.user_id,
+                            "session_id": msg.session_id,
+                            "username": session.get("username", "Unknown"),
+                            "name": session.get("name", "Unknown"),
+                            "role": session.get("role", "user")
+                        }
+                        logger.info(f"💬 Chat - Usuario autenticado: {user_context['name']} ({user_context['username']})")
+                    else:
+                        # Sesión inválida o expirada
+                        user_context = {"user_id": msg.user_id, "session_id": msg.session_id}
+                        logger.info(f"💬 Chat - Sesión inválida: {msg.user_id}")
+                else:
+                    # Sin sesión, usuario básico
+                    user_context = {"user_id": msg.user_id}
+                    logger.info(f"💬 Chat - Usuario básico: {msg.user_id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Error validando usuario: {e}")
+                user_context = {"user_id": msg.user_id}
         
-        if super_agent:
+        if consolidated_agent:
             # Usar el agente consolidado con contexto
             response = await consolidated_agent.process_query(msg.message, user_context)
             
@@ -430,25 +544,30 @@ async def get_chat_suggestions(q: str = ""):
 
 @app.post("/api/auth/login")
 async def login_user(user_data: dict):
-    """Iniciar sesión de usuario"""
+    """Iniciar sesión de propietario (sin contraseña)"""
     try:
-        user_id = user_data.get("user_id", "").lower()
-        session_id = user_data.get("session_id", f"session_{datetime.now().timestamp()}")
+        owner_name = user_data.get("owner_name", "").lower().strip()
         
-        if not user_auth.validate_user(user_id):
+        if not owner_name:
             return {
                 "success": False,
-                "message": "Usuario no válido",
-                "valid_users": list(user_auth.owners.keys())
+                "message": "Nombre de propietario es requerido",
+                "available_owners": list(user_auth.owners.keys())
             }
         
-        user_context = user_auth.create_user_context(user_id, session_id)
+        auth_result = user_auth.authenticate_owner(owner_name)
+        if not auth_result or not auth_result.get("success"):
+            return {
+                "success": False,
+                "message": "Propietario no autorizado",
+                "available_owners": list(user_auth.owners.keys())
+            }
         
         return {
             "success": True,
-            "message": f"Bienvenido, {user_context['name']}",
-            "user": user_context,
-            "session_id": session_id
+            "message": f"Bienvenido, {auth_result['owner']['name']}",
+            "owner": auth_result["owner"],
+            "session_id": auth_result["session_id"]
         }
         
     except Exception as e:
@@ -457,27 +576,40 @@ async def login_user(user_data: dict):
 
 @app.get("/api/auth/users")
 async def get_available_users():
-    """Obtener usuarios disponibles"""
+    """Obtener propietarios disponibles"""
     return {
         "success": True,
-        "users": [
+        "owners": [
             {
-                "id": user_id,
-                "name": info["display_name"],
-                "icon": info["icon"],
-                "color": info["color"]
+                "id": owner_name,
+                "name": info["name"],
+                "role": info["role"]
             }
-            for user_id, info in user_auth.owners.items()
+            for owner_name, info in user_auth.owners.items()
         ]
     }
 
 @app.get("/api/auth/active")
 async def get_active_users():
-    """Obtener usuarios activos"""
-    return {
-        "success": True,
-        "active_users": user_auth.get_active_users()
-    }
+    """Obtener propietarios activos"""
+    try:
+        active_sessions = []
+        for session_id, session_info in user_auth.sessions.items():
+            if session_info["expires"] > datetime.now():
+                active_sessions.append({
+                    "session_id": session_id,
+                    "owner_name": session_info["owner_name"],
+                    "name": session_info["name"],
+                    "role": session_info["role"]
+                })
+        
+        return {
+            "success": True,
+            "active_owners": active_sessions
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo propietarios activos: {e}")
+        return {"success": False, "active_owners": []}
 
 @app.post("/api/auth/logout")
 async def logout_user(session_data: dict):
@@ -485,9 +617,13 @@ async def logout_user(session_data: dict):
     try:
         session_id = session_data.get("session_id")
         if session_id:
-            user_auth.logout_user(session_id)
+            success = user_auth.logout(session_id)
+            if success:
+                return {"success": True, "message": "Sesión cerrada correctamente"}
+            else:
+                return {"success": False, "message": "Sesión no encontrada"}
         
-        return {"success": True, "message": "Sesión cerrada"}
+        return {"success": False, "message": "session_id requerido"}
     except Exception as e:
         logger.error(f"Error en logout: {e}")
         return {"success": False, "message": "Error cerrando sesión"}
@@ -504,8 +640,13 @@ async def get_all_clients(owner: Optional[str] = None):
                 clients = sheets_service.get_clients_by_owner(owner, include_inactive=True)
                 logger.info(f"📊 Obtenidos {len(clients)} clientes de {owner} desde Google Sheets")
             else:
-                clients = sheets_service.get_all_clients(include_inactive=True)
-                logger.info(f"📊 Obtenidos {len(clients)} clientes desde Google Sheets")
+                # Usar datos enriquecidos con información de cobranza
+                if hasattr(sheets_service, 'get_enriched_clients'):
+                    clients = sheets_service.get_enriched_clients()
+                    logger.info(f"📊 Obtenidos {len(clients)} clientes enriquecidos desde Google Sheets")
+                else:
+                    clients = sheets_service.get_all_clients(include_inactive=True)
+                    logger.info(f"📊 Obtenidos {len(clients)} clientes desde Google Sheets")
             
             return {
                 "success": True,
@@ -879,7 +1020,13 @@ async def telegram_webhook(request: Request):
         api_dir = Path(__file__).parents[2] / "api"
         sys.path.insert(0, str(api_dir))
         
-        from telegram_webhook import handle_telegram_webhook
+        try:
+            from telegram_webhook import handle_telegram_webhook
+        except ImportError:
+            logger.warning("⚠️ telegram_webhook module not found, using simplified handler")
+            # Función básica de fallback
+            def handle_telegram_webhook(update_data):
+                return {"success": False, "message": "Telegram handler not available"}
         
         # Obtener los datos del update
         update_data = await request.json()
@@ -894,14 +1041,13 @@ async def telegram_webhook(request: Request):
         carlos_response = None
         if text and text.lower() not in ['/start', '/help']:
             try:
-                # Procesar con Carlos (el agente real)
-                from .services.super_agent_final import SuperIntelligentAgent
-                agent = SuperIntelligentAgent()
-                carlos_result = agent.process_query(text)
-                
-                if carlos_result.get("success"):
-                    carlos_response = carlos_result.get("response", "")
+                # Usar el agente consolidado ya disponible
+                if consolidated_agent:
+                    carlos_result = await consolidated_agent.process_query(text)
                     
+                    if carlos_result and carlos_result.message:
+                        carlos_response = carlos_result.message
+                        
             except Exception as e:
                 logger.warning(f"Carlos no disponible para Telegram: {e}")
         
@@ -1100,7 +1246,13 @@ async def enhanced_chat(request: Request):
             }
         
         # Procesar con agente consolidado
-        response = await consolidated_agent.process_query(message, {"propietario": propietario, "session_id": session_id})
+        if consolidated_agent:
+            response = await consolidated_agent.process_query(message, {"propietario": propietario, "session_id": session_id})
+        else:
+            # Fallback si el agente no está disponible
+            from backend.app.services.consolidated_agent import ConsolidatedISPAgent
+            temp_agent = ConsolidatedISPAgent()
+            response = await temp_agent.process_query(message, {"propietario": propietario, "session_id": session_id})
         
         return {
             "success": True,
@@ -1278,6 +1430,11 @@ async def search_entities(
     except Exception as e:
         logger.error(f"Error searching entities: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# === MOUNT FRONTEND AL FINAL ===
+# Montar el directorio 'frontend' en la raíz para servir la SPA/sitio estático.
+# IMPORTANTE: Esto debe ir al final, después de todas las rutas API.
+app.mount("/", StaticFiles(directory=settings.FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

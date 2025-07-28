@@ -1,7 +1,6 @@
 // new-script.js - Sistema homologado Red Soluciones ISP
 
 const API_BASE = '/api';
-const API_V2_BASE = '/api/v2'; // Nueva API homologada
 const API_TIMEOUT = 15000;
 const MAX_RETRIES = 3;
 
@@ -61,16 +60,16 @@ const SystemState = {
   // Verificar estado del sistema backend
   async checkSystemStatus() {
     try {
-      const response = await fetch(`${API_V2_BASE}/system/status`);
+      const response = await fetch(`${API_BASE}/health`);
       const data = await response.json();
       
       this.status = {
-        context_engine: data.entities_loaded > 0,
-        enhanced_agent: data.status === 'operational',
-        sheets_service: data.cache_health && Object.keys(data.cache_health.cached_sheets).length > 0
+        context_engine: data.status === 'healthy',
+        enhanced_agent: data.services?.super_agent || false,
+        sheets_service: data.services?.google_sheets || false
       };
       
-      return data;
+      return { success: true, ...data };
     } catch (error) {
       console.error('Error verificando estado del sistema:', error);
       return { success: false, error: error.message };
@@ -82,7 +81,7 @@ const SystemState = {
     try {
       console.log(`🧠 Cargando contexto completo para ${propietario}...`);
       
-      const response = await fetch(`${API_V2_BASE}/context/${propietario}`);
+      const response = await fetch(`${API_BASE}/auth/active`);
       const data = await response.json();
       
       if (data.success) {
@@ -112,7 +111,7 @@ const SystemState = {
   // Cargar datos del dashboard mejorado
   async loadDashboardData(propietario) {
     try {
-      const response = await fetch(`${API_V2_BASE}/dashboard/${propietario}`);
+      const response = await fetch(`${API_BASE}/dashboard`);
       const data = await response.json();
       
       if (data.success) {
@@ -129,7 +128,7 @@ const SystemState = {
   // Cargar insights del negocio
   async loadBusinessInsights(propietario) {
     try {
-      const response = await fetch(`${API_V2_BASE}/insights/${propietario}`);
+      const response = await fetch(`${API_BASE}/dashboard/kpis`);
       const data = await response.json();
       
       if (data.success) {
@@ -148,7 +147,7 @@ const SystemState = {
     try {
       console.log('🔄 Refrescando datos del sistema...');
       
-      const response = await fetch(`${API_V2_BASE}/system/refresh`, {
+      const response = await fetch(`${API_BASE}/health`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sheet_type: sheetType })
@@ -377,8 +376,7 @@ const UserAuth = {
     } catch (error) {
       console.error('Error en logout:', error);
     }
-  }
-};
+  },
   
   // Seleccionar usuario
   async selectUser(userId) {
@@ -764,7 +762,7 @@ function showSuccessNotification(message, details = '') {
         <strong>¡Éxito!</strong> ${message}
         ${details ? `<div class="success-details">${details}</div>` : ''}
       </div>
-      <button class="success-close" onclick="this.parentElement.remove()">&times;</button>
+      <button class="success-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
     </div>
   `;
   notification.style.cssText = `
@@ -797,35 +795,6 @@ function showSuccessNotification(message, details = '') {
 }
 
 // Función para mostrar notificaciones de éxito
-function showSuccessNotification(message) {
-  const notification = document.createElement('div');
-  notification.className = 'success-notification';
-  notification.innerHTML = `
-    <i class="fas fa-check-circle"></i>
-    ${message}
-  `;
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #10b981;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 9999;
-    font-size: 0.9rem;
-  `;
-  
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
-    }
-  }, 3000);
-}
-
 // Función para activar/desactivar el chat IA
 function toggleAIChat() {
   const chatPanel = document.getElementById('chat-panel');
@@ -1193,53 +1162,6 @@ window.onclick = function(event) {
       modal.style.display = 'none';
     }
   });
-}
-
-// Función para agregar cliente desde el panel de administración
-async function addClient() {
-  const form = document.getElementById('add-client-form');
-  if (!form) return;
-  
-  const formData = new FormData(form);
-  const clientData = {
-    name: formData.get('name'),
-    email: formData.get('email'),
-    phone: formData.get('phone'),
-    zone: formData.get('zone'),
-    monthly_fee: formData.get('monthly_fee'),
-    notes: formData.get('notes')
-  };
-  
-  // Validación básica
-  if (!clientData.name || !clientData.email) {
-    alert('Nombre y email son obligatorios');
-    return;
-  }
-  
-  try {
-    const response = await fetch(`${API_BASE}/clients`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(clientData)
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      showSuccessNotification('Cliente agregado correctamente');
-      form.reset();
-      // Actualizar el dashboard si estamos en esa página
-      if (typeof loadDashboard === 'function') {
-        loadDashboard();
-      }
-    } else {
-      alert(`Error: ${result.message}`);
-    }
-  } catch (error) {
-    handleApiError(error, 'agregar cliente');
-  }
 }
 
 // Función para buscar clientes con filtros
